@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#10151d">
+  <meta name="description" content="Palworld 所持パル配合プランナー">
+  <title>PalBreeder Web</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div><h1>PalBreeder Web <span class="version">v0.1</span></h1><p>所持パルから最短配合・パッシブ継承をブラウザ内で計算</p></div>
+    <div class="privacy-pill">🔒 所持データはローカル処理</div>
+  </header>
+  <main class="shell">
+    <section class="card import-card" id="dropZone">
+      <div class="import-main"><div><strong>1. 所持パルデータ</strong><div class="muted">PalBoxCommunityReader v2.7 の <code>owned_pals.json</code> を選択 / ドロップ</div></div><label class="button primary">JSONを選択<input id="fileInput" type="file" accept=".json,application/json" hidden></label></div>
+      <div class="status-grid"><div><span>ゲームデータ</span><strong id="dataStatus">読み込み中…</strong></div><div><span>プレイヤー</span><strong id="playerName">未読込</strong></div><div><span>所持</span><strong id="ownedSummary">—</strong></div><div><span>データ更新</span><strong id="updatedAt">—</strong></div></div>
+      <div id="errorBox" class="error hidden"></div>
+    </section>
+    <section class="card target-card"><div class="target-row"><label><span>2. 目的パル</span><input id="targetInput" list="palOptions" placeholder="例：アヌビス / Anubis / #139" autocomplete="off"><datalist id="palOptions"></datalist></label><button id="searchBtn" class="button primary" disabled>最短ルート検索</button></div><div id="targetResolved" class="muted">ゲームデータを読み込んでいます。</div></section>
+    <nav class="tabs"><button class="tab active" data-tab="route">最短ルート</button><button class="tab" data-tab="flow">フローチャート</button><button class="tab" data-tab="reverse">親から逆引き</button><button class="tab" data-tab="owned">所持パル</button><button class="tab" data-tab="privacy">プライバシー</button></nav>
+    <section id="tab-route" class="tab-panel active"><div class="grid two"><article class="card"><div class="card-title"><h2>最短ルート</h2><span id="routeBadge" class="badge">未計算</span></div><p id="routeNote" class="muted">所持データを読み込み、目的パルを検索してください。</p><div class="table-wrap"><table><thead><tr><th>手順</th><th>親1</th><th>親2</th><th>子</th><th>状態</th></tr></thead><tbody id="routeBody"></tbody></table></div></article><article class="card"><h2>追加で必要 / 確認</h2><div class="table-wrap compact"><table><thead><tr><th>パル</th><th>理由</th></tr></thead><tbody id="requiredBody"></tbody></table></div></article></div><div class="grid two"><article class="card"><h2>直接配合一覧</h2><div class="table-wrap"><table><thead><tr><th>親1</th><th>親2</th><th>状態</th></tr></thead><tbody id="directBody"></tbody></table></div></article><article class="card"><h2>あと1体で作れる</h2><div class="table-wrap"><table><thead><tr><th>所持親</th><th>追加で必要</th></tr></thead><tbody id="oneMissingBody"></tbody></table></div></article></div></section>
+    <section id="tab-flow" class="tab-panel"><article class="card"><div class="card-title"><div><h2>配合フローチャート</h2><p class="muted">左から右へ進みます。</p></div><div class="toolbar"><button id="pngBtn" class="button">PNG保存</button></div></div><div class="flow-layout"><div class="flow-viewport"><svg id="flowSvg" xmlns="http://www.w3.org/2000/svg"></svg></div><aside id="flowDetail" class="detail-panel"><h3>パル詳細</h3><p class="muted">箱をクリックしてください。</p></aside></div></article></section>
+    <section id="tab-reverse" class="tab-panel"><article class="card"><div class="target-row"><label><span>親パル</span><input id="reverseInput" list="palOptions" placeholder="親にするパル"></label><label class="check"><input id="ownedPartnersOnly" type="checkbox" checked> 相手親を所持パルだけに限定</label><button id="reverseBtn" class="button primary" disabled>逆引き検索</button></div><div class="table-wrap"><table><thead><tr><th>相手親</th><th>生まれるパル</th><th>状態</th></tr></thead><tbody id="reverseBody"></tbody></table></div></article></section>
+    <section id="tab-owned" class="tab-panel"><article class="card"><div class="card-title"><h2>所持パル</h2><input id="ownedFilter" placeholder="名前で絞り込み"></div><div class="table-wrap"><table><thead><tr><th>パル</th><th>所持数</th><th>♂</th><th>♀</th><th>不明</th><th>所持パッシブ</th></tr></thead><tbody id="ownedBody"></tbody></table></div></article></section>
+    <section id="tab-privacy" class="tab-panel"><article class="card prose"><h2>データの扱い</h2><p><strong>読み込んだ <code>owned_pals.json</code> は外部へアップロードしません。</strong> ブラウザ内メモリだけで処理します。</p><p>GitHub Pagesにはセーブデータ、NAS情報、SMB認証情報、プレイヤーJSON、秘密鍵を保存しません。</p></article></section>
+  </main>
+  <footer><span>PalBreeder Web v0.1</span><span>非公式ファンツール</span></footer>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
