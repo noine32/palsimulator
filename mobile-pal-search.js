@@ -52,13 +52,14 @@
     const clearBtn=modal.querySelector('.pal-search-sheet-clear');
     let previousBodyOverflow='';
     let previousValue='';
+    let suppressChoiceUntil=0;
 
     const updateViewport=()=>{
       const h=window.visualViewport?.height||window.innerHeight;
       modal.style.setProperty('--pal-search-vh',`${Math.round(h)}px`);
     };
     const open=()=>{
-      if(!isMobile())return;
+      if(!isMobile()||!modal.classList.contains('hidden'))return;
       previousValue=input.value;
       searchInput.value=input.value;
       renderRows(results,inputId,searchInput.value);
@@ -67,7 +68,12 @@
       document.body.style.overflow='hidden';
       document.body.classList.add('pal-search-open');
       modal.classList.remove('hidden');
-      requestAnimationFrame(()=>{searchInput.focus({preventScroll:true});searchInput.select()});
+      // Do not allow the same tap that opened the sheet to select a result.
+      suppressChoiceUntil=performance.now()+350;
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        searchInput.focus({preventScroll:true});
+        searchInput.select();
+      }));
     };
     const close=()=>{
       modal.classList.add('hidden');
@@ -76,13 +82,17 @@
       input.blur();
     };
 
-    input.addEventListener('pointerdown',e=>{
+    // Open only after the tap has completed. Opening on pointerdown can place the
+    // newly-created result row under the finger and cause accidental click-through.
+    input.addEventListener('click',e=>{
       if(!isMobile())return;
       e.preventDefault();
       open();
     });
-    input.addEventListener('focus',()=>{if(isMobile()){input.blur();open()}});
-    input.addEventListener('keydown',e=>{if(isMobile())e.preventDefault()});
+    input.addEventListener('keydown',e=>{
+      if(!isMobile())return;
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}
+    });
 
     searchInput.addEventListener('input',()=>renderRows(results,inputId,searchInput.value));
     searchInput.addEventListener('keydown',e=>{
@@ -93,6 +103,7 @@
       }
     });
     results.addEventListener('click',e=>{
+      if(performance.now()<suppressChoiceUntil)return;
       const el=e.target.closest('.pal-search-option');
       if(!el)return;
       choose(el.dataset.value);
@@ -146,7 +157,17 @@
       if(button&&!button.disabled){button.click();input.blur()}
     };
 
-    makeMobilePicker(input,inputId,button,choose);
+    const picker=makeMobilePicker(input,inputId,button,choose);
+    const mobileMq=matchMedia('(max-width:900px)');
+    const syncMobileInput=()=>{
+      // On mobile this field acts as a launcher, not as the actual text editor.
+      // readonly prevents the phone keyboard from appearing before the search sheet.
+      input.readOnly=mobileMq.matches;
+      if(mobileMq.matches){input.setAttribute('aria-haspopup','dialog')}
+      else input.removeAttribute('aria-haspopup');
+    };
+    syncMobileInput();
+    mobileMq.addEventListener?.('change',syncMobileInput);
 
     const renderInline=()=>{
       if(isMobile())return;
@@ -173,9 +194,10 @@
     });
     clear.addEventListener('click',e=>{
       e.preventDefault();
+      e.stopPropagation();
       input.value='';
       input.dispatchEvent(new Event('input',{bubbles:true}));
-      if(isMobile())input.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch'}));
+      if(isMobile())picker.open();
       else{input.focus();renderInline()}
     });
     button?.addEventListener('click',()=>saveRecent(inputId,input.value));
