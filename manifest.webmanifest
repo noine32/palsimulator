@@ -1,0 +1,19 @@
+{
+  "name": "PalBreeder Web",
+  "short_name": "PalBreeder",
+  "description": "Palworld 所持パル配合プランナー",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d1117",
+  "theme_color": "#10151d",
+  "icons": [
+    {
+      "src": "./palbreeder-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
