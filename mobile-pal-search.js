@@ -7,6 +7,7 @@
   const score=(value,q)=>{const v=normalize(value);if(!q)return 9;if(v===q)return 0;if(v.startsWith(q))return 1;const words=v.split(/\s+/);if(words.some(w=>w.startsWith(q)))return 2;if(v.includes(q))return 3;return 99};
   const isMobile=()=>matchMedia('(max-width:900px)').matches;
   const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const ownedValues=()=>new Set([...document.querySelectorAll('#ownedBody tr td:first-child')].map(cell=>normalize(cell.textContent)));
 
   function rowsFor(inputId,q){
     const all=optionValues();
@@ -25,7 +26,8 @@
     if(!all.length){container.innerHTML='<div class="pal-search-empty">パルデータを読み込み中…</div>';return}
     const rows=rowsFor(inputId,q);
     if(!rows.length){container.innerHTML='<div class="pal-search-empty">一致するパルがありません</div>';return}
-    container.innerHTML=rows.map(x=>`<button type="button" class="pal-search-option" role="option" data-value="${escapeHtml(x.v)}"><span>${escapeHtml(x.v)}</span>${x.recent?'<small>最近</small>':''}</button>`).join('');
+    const owned=ownedValues();
+    container.innerHTML=rows.map(x=>`<button type="button" class="pal-search-option" role="option" data-value="${escapeHtml(x.v)}"><span>${escapeHtml(x.v)}</span><span class="pal-search-option-meta">${owned.has(normalize(x.v))?'<small class="is-owned">所持中</small>':''}${x.recent?'<small>最近</small>':''}</span></button>`).join('');
   }
 
   function makeMobilePicker(input,inputId,button,choose){
