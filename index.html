@@ -44,6 +44,8 @@
     <section id="tab-privacy" class="tab-panel"><article class="card prose"><h2>データの扱い</h2><p><strong>ローカルJSONを選んだ場合、そのファイルは外部へアップロードしません。</strong> ブラウザ内メモリだけで処理します。</p><p>クラウド同期を使う場合は、自宅Readerが本人用の最小JSONだけをCloudflare WorkerへHTTPS送信し、本人用Read TokenでそのプレイヤーのJSONだけを取得します。</p><p>「この端末にトークンを保存」を有効にした場合のみ、そのRead TokenをこのブラウザのlocalStorageへ保存します。共有PCでは有効にしないでください。</p><p>GitHub Pagesにはセーブデータ、NAS情報、SMB認証情報、Push Secret、プレイヤーJSON、Read Tokenを保存しません。</p></article></section>
   </main>
   <footer><span>PalBreeder Web v0.4</span><span>非公式ファンツール</span></footer>
+  <script src="./data-fetch-cache.js"></script>
+  <script src="./passive-note-fix.js"></script>
   <script src="./flow-fix.js"></script>
   <script src="./passive-extension.js"></script>
   <script type="module" src="./app.js"></script>
