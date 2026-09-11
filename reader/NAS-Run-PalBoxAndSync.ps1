@@ -1,54 +1,68 @@
 param(
-  [string]$Root = 'C:\PalBreeder',
-  [string]$WorkerBaseUrl = 'https://palbreeder-api.ryota-k-4869.workers.dev',
-  [string]$PushSecretEnvName = 'PALBREEDER_PUSH_SECRET'
+  [string]$Root = 'C:\PalBreeder'
 )
 
 $ErrorActionPreference = 'Stop'
-
-$ReaderScript = Join-Path $Root 'Reader\PalBoxCommunityReader.ps1'
-$ExportRoot = Join-Path $Root 'Output\PalBoxReader_AllPlayers'
+$ConfigPath = Join-Path $Root 'nas-config.json'
+$ReaderScript = Join-Path $Root 'PalBoxCommunityReader-NAS.ps1'
 $Uploader = Join-Path $Root 'Upload-PlayerData.ps1'
 $TokenMapPath = Join-Path $Root 'secrets\player_tokens.json'
+$LogDir = Join-Path $Root 'logs'
+New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+$LogPath = Join-Path $LogDir ('sync_' + (Get-Date -Format 'yyyyMMdd') + '.log')
 
-function Require-Path([string]$Path, [string]$Label) {
-  if (-not (Test-Path -LiteralPath $Path)) {
-    throw "$Label not found: $Path"
-  }
+function Log([string]$Text) {
+  $line = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + ' ' + $Text
+  Write-Host $line
+  Add-Content -LiteralPath $LogPath -Value $line -Encoding UTF8
 }
 
-Require-Path $ReaderScript 'Reader script'
-Require-Path $Uploader 'Uploader'
-
-$pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'Process')
-if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'User') }
-if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'Machine') }
-if (-not $pushSecret) {
-  throw "$PushSecretEnvName is not configured. Register PUSH_SECRET as a Windows environment variable."
+function Require-Path([string]$Path,[string]$Label) {
+  if (-not (Test-Path -LiteralPath $Path)) { throw ($Label + ' not found: ' + $Path) }
 }
 
-Write-Host "=== Reader start ==="
-Write-Host "Reader: $ReaderScript"
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ReaderScript
-$readerExit = $LASTEXITCODE
-if ($readerExit -ne 0) {
-  throw "Reader failed. ExitCode=$readerExit"
+try {
+  Require-Path $ConfigPath 'Config'
+  Require-Path $ReaderScript 'Reader'
+  Require-Path $Uploader 'Uploader'
+
+  $cfg = Get-Content -LiteralPath $ConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
+  $WorldPath = [string]$cfg.world_path
+  $WorkerBaseUrl = [string]$cfg.worker_base_url
+  if (-not $WorldPath) { throw 'world_path is missing in nas-config.json.' }
+  if (-not $WorkerBaseUrl) { throw 'worker_base_url is missing in nas-config.json.' }
+
+  $OutputRoot = Join-Path $Root 'Output\PalBoxReader_AllPlayers'
+  $WorkRoot = Join-Path $Root 'work'
+  $ToolsDir = Join-Path $Root 'tools'
+
+  $pushSecret = [Environment]::GetEnvironmentVariable('PALBREEDER_PUSH_SECRET','Process')
+  if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable('PALBREEDER_PUSH_SECRET','User') }
+  if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable('PALBREEDER_PUSH_SECRET','Machine') }
+  if (-not $pushSecret) { throw 'PALBREEDER_PUSH_SECRET is not configured.' }
+
+  Log 'Reader start.'
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ReaderScript `
+    -WorldPath $WorldPath `
+    -OutputRoot $OutputRoot `
+    -WorkRoot $WorkRoot `
+    -ToolsDir $ToolsDir
+  if ($LASTEXITCODE -ne 0) { throw ('Reader failed. ExitCode=' + $LASTEXITCODE) }
+  Log 'Reader complete.'
+
+  Require-Path $OutputRoot 'Export root'
+  Log 'Cloud upload start.'
+  & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Uploader `
+    -ExportRoot $OutputRoot `
+    -WorkerBaseUrl $WorkerBaseUrl `
+    -PushSecret $pushSecret `
+    -TokenMapPath $TokenMapPath
+  if ($LASTEXITCODE -ne 0) { throw ('Cloud upload failed. ExitCode=' + $LASTEXITCODE) }
+  Log 'Cloud upload complete.'
+  exit 0
 }
-Write-Host "=== Reader complete ==="
-
-Require-Path $ExportRoot 'Export root'
-
-Write-Host "=== Cloud upload start ==="
-Write-Host "Export: $ExportRoot"
-& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Uploader `
-  -ExportRoot $ExportRoot `
-  -WorkerBaseUrl $WorkerBaseUrl `
-  -PushSecret $pushSecret `
-  -TokenMapPath $TokenMapPath
-$uploadExit = $LASTEXITCODE
-if ($uploadExit -ne 0) {
-  throw "Cloud upload failed. ExitCode=$uploadExit"
+catch {
+  Log ('ERROR: ' + $_.Exception.Message)
+  Log (($_ | Out-String).Trim())
+  exit 1
 }
-
-Write-Host "=== Cloud upload complete ==="
-Write-Host "Done."
