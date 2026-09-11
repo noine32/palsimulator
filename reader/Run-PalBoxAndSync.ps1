@@ -49,14 +49,14 @@ if (-not $ReaderScript) {
 }
 
 if (-not $ReaderScript -or -not (Test-Path -LiteralPath $ReaderScript)) {
-  throw 'PalBoxCommunityReader.ps1 が見つかりません。-ReaderScript で実ファイルを指定してください。'
+  throw 'PalBoxCommunityReader.ps1 was not found. Use -ReaderScript to specify the actual file.'
 }
 
 $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'Process')
 if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'User') }
 if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'Machine') }
 if (-not $pushSecret) {
-  throw "$PushSecretEnvName が環境変数に登録されていません。PUSH_SECRETをファイルへ直書きせず、ユーザー環境変数として登録してください。"
+  throw "$PushSecretEnvName is not registered as an environment variable. Store PUSH_SECRET as a user environment variable instead of writing it into a file."
 }
 
 Write-Host '=== PalBoxCommunityReader start ==='
@@ -85,7 +85,7 @@ if (-not $ExportRoot) {
 }
 
 if (-not $ExportRoot -or -not (Test-Path -LiteralPath $ExportRoot)) {
-  throw 'PalBoxReader_AllPlayers が自動検出できませんでした。-ExportRoot で指定してください。'
+  throw 'PalBoxReader_AllPlayers could not be found automatically. Use -ExportRoot to specify it.'
 }
 
 $uploaderCandidates = @(
@@ -94,7 +94,7 @@ $uploaderCandidates = @(
 ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
 
 if (-not $uploaderCandidates) {
-  throw 'Upload-PlayerData.ps1 が見つかりません。Run-PalBoxAndSync.ps1 と同じフォルダへコピーしてください。'
+  throw 'Upload-PlayerData.ps1 was not found. Put it in the same folder as Run-PalBoxAndSync.ps1.'
 }
 $uploader = $uploaderCandidates
 
