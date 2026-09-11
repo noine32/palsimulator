@@ -10,7 +10,13 @@ $WorkerBaseUrl = $WorkerBaseUrl.TrimEnd('/')
 
 function New-ReadToken {
   $bytes = New-Object byte[] 32
-  [System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+  $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+  try {
+    $rng.GetBytes($bytes)
+  }
+  finally {
+    if ($null -ne $rng) { $rng.Dispose() }
+  }
   return [Convert]::ToBase64String($bytes).TrimEnd('=').Replace('+','-').Replace('/','_')
 }
 
@@ -22,8 +28,12 @@ if (-not (Test-Path -LiteralPath $ExportRoot)) { throw "ExportRoot not found: $E
 
 $tokenMap = @{}
 if ($TokenMapPath -and (Test-Path -LiteralPath $TokenMapPath)) {
-  $loaded = Get-Content -LiteralPath $TokenMapPath -Raw | ConvertFrom-Json -AsHashtable
-  if ($loaded) { $tokenMap = $loaded }
+  $loaded = Get-Content -LiteralPath $TokenMapPath -Raw | ConvertFrom-Json
+  if ($loaded) {
+    foreach ($prop in $loaded.PSObject.Properties) {
+      $tokenMap[[string]$prop.Name] = [string]$prop.Value
+    }
+  }
 }
 
 $files = Get-ChildItem -LiteralPath $ExportRoot -Directory -Filter 'Player_*' | ForEach-Object {
