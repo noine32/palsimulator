@@ -8,13 +8,6 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-function Resolve-ExistingPath([string]$Path) {
-  if ($Path -and (Test-Path -LiteralPath $Path)) {
-    return (Resolve-Path -LiteralPath $Path).Path
-  }
-  return $null
-}
-
 function Find-ExportRoot([string[]]$Roots) {
   $candidates = @()
   foreach ($root in $Roots) {
@@ -43,13 +36,14 @@ function Find-ExportRoot([string[]]$Roots) {
   return $null
 }
 
-$repoReaderDir = $PSScriptRoot
-$readerRoot = Split-Path -Parent $repoReaderDir
+$scriptDir = $PSScriptRoot
+$parentDir = Split-Path -Parent $scriptDir
 
 if (-not $ReaderScript) {
   $nearby = @(
-    (Join-Path $readerRoot 'PalBoxCommunityReader.ps1'),
-    (Join-Path (Split-Path -Parent $readerRoot) 'PalBoxCommunityReader.ps1')
+    (Join-Path $scriptDir 'PalBoxCommunityReader.ps1'),
+    (Join-Path $parentDir 'PalBoxCommunityReader.ps1'),
+    (Join-Path (Split-Path -Parent $parentDir) 'PalBoxCommunityReader.ps1')
   ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
   if ($nearby) { $ReaderScript = $nearby }
 }
@@ -73,13 +67,15 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host '=== PalBoxCommunityReader complete ==='
 
 if (-not $ExportRoot) {
+  $readerDir = Split-Path -Parent $ReaderScript
   $searchRoots = @(
-    (Split-Path -Parent $ReaderScript),
-    $readerRoot,
-    (Split-Path -Parent $readerRoot)
+    $readerDir,
+    $scriptDir,
+    $parentDir,
+    (Split-Path -Parent $parentDir)
   )
 
-  $shareRootTxt = Join-Path (Split-Path -Parent $ReaderScript) 'ShareRoot.txt'
+  $shareRootTxt = Join-Path $readerDir 'ShareRoot.txt'
   if (Test-Path -LiteralPath $shareRootTxt) {
     $shareRoot = (Get-Content -LiteralPath $shareRootTxt -Raw).Trim()
     if ($shareRoot) { $searchRoots += $shareRoot }
@@ -92,10 +88,15 @@ if (-not $ExportRoot -or -not (Test-Path -LiteralPath $ExportRoot)) {
   throw 'PalBoxReader_AllPlayers が自動検出できませんでした。-ExportRoot で指定してください。'
 }
 
-$uploader = Join-Path $repoReaderDir 'Upload-PlayerData.ps1'
-if (-not (Test-Path -LiteralPath $uploader)) {
-  throw "Uploader not found: $uploader"
+$uploaderCandidates = @(
+  (Join-Path $scriptDir 'Upload-PlayerData.ps1'),
+  (Join-Path $parentDir 'reader\Upload-PlayerData.ps1')
+) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+
+if (-not $uploaderCandidates) {
+  throw 'Upload-PlayerData.ps1 が見つかりません。Run-PalBoxAndSync.ps1 と同じフォルダへコピーしてください。'
 }
+$uploader = $uploaderCandidates
 
 Write-Host "=== Cloud sync start: $ExportRoot ==="
 & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $uploader `
