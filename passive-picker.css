@@ -1,0 +1,23 @@
+.passive-picker-launcher,.selected-passive-chips,.passive-picker-sheet{display:none}
+@media(max-width:900px){
+  .passive-ext-grid label:has(.passiveSelect) .passiveSelect{display:none}
+  .passive-picker-launcher{display:block;width:100%;min-height:48px;padding:10px 38px 10px 11px;border:1px solid #344254;border-radius:9px;background:#0f151d;color:var(--muted);text-align:left;position:relative}
+  .passive-picker-launcher::after{content:'›';position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--muted)}
+  .passive-picker-launcher.has-value{border-color:#3f6283;background:#162536;color:var(--text)}
+  .selected-passive-chips{display:flex;gap:6px;flex-wrap:wrap;margin:-2px 0 12px}
+  .selected-passive-chips>button{display:flex;align-items:center;gap:6px;max-width:100%;padding:7px 9px;border:1px solid #3f6283;border-radius:999px;background:#162536;color:#b8dcff;font-size:12px}
+  .selected-passive-chips>button span{font-size:16px;line-height:1}
+  .passive-picker-sheet{position:fixed;z-index:10020;inset:0;display:block}
+  .passive-picker-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62)}
+  .passive-picker-dialog{position:absolute;inset:0;display:flex;flex-direction:column;background:#0d1117}
+  .passive-picker-head{display:grid;grid-template-columns:68px 1fr 68px;align-items:center;min-height:54px;padding:6px 10px;border-bottom:1px solid var(--line);background:#10151d}
+  .passive-picker-head strong{text-align:center}
+  .passive-picker-head button{border:0;background:transparent;color:var(--accent);padding:10px 2px}
+  .passive-picker-head button:last-child{text-align:right}
+  .passive-picker-search{padding:10px;border-bottom:1px solid var(--line);background:#10151d}
+  .passive-picker-search input{min-height:48px;font-size:16px}
+  .passive-picker-options{flex:1;min-height:0;overflow-y:auto;padding:7px 8px calc(16px + env(safe-area-inset-bottom));overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+  .passive-picker-options>button{display:flex;width:100%;min-height:50px;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;border:0;border-bottom:1px solid rgba(255,255,255,.05);border-radius:8px;background:transparent;color:var(--text);text-align:left}
+  .passive-picker-options>button.active{background:#1a2d40;color:#b8dcff}
+  .passive-picker-options small{color:var(--accent)}
+}
