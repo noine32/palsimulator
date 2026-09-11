@@ -18,12 +18,21 @@ if (-not $machineSecret) {
   throw 'PALBREEDER_PUSH_SECRET is not stored as a Machine environment variable. Re-run Setup-NAS.ps1 as Administrator.'
 }
 
-$action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument ('-NoProfile -ExecutionPolicy Bypass -File "' + $runner + '" -Root "' + $Root + '"')
-$trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes $Minutes) -RepetitionDuration ([TimeSpan]::MaxValue)
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 8)
-$principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
+$taskCommand = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + $runner + '" -Root "' + $Root + '"'
+$args = @(
+  '/Create',
+  '/TN', $TaskName,
+  '/TR', $taskCommand,
+  '/SC', 'MINUTE',
+  '/MO', [string]$Minutes,
+  '/RU', 'SYSTEM',
+  '/RL', 'HIGHEST',
+  '/F'
+)
 
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null
+$p = Start-Process -FilePath 'schtasks.exe' -ArgumentList $args -Wait -PassThru -NoNewWindow
+if ($p.ExitCode -ne 0) { throw ('schtasks.exe failed. ExitCode=' + $p.ExitCode) }
+
 Write-Host ('Scheduled task installed: ' + $TaskName)
 Write-Host ('Interval: ' + $Minutes + ' minute(s)')
-Write-Host 'The task runs as SYSTEM and skips overlapping runs.'
+Write-Host 'The task runs as SYSTEM.'
