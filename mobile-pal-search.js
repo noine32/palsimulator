@@ -43,10 +43,10 @@
       let rows=[];
       if(!q){
         const recent=getRecent(inputId).filter(v=>all.includes(v));
-        const rest=all.filter(v=>!recent.includes(v)).slice(0,8-recent.length);
-        rows=[...recent,...rest].slice(0,8).map((v,i)=>({v,recent:i<recent.length}));
+        const rest=all.filter(v=>!recent.includes(v)).slice(0,12-recent.length);
+        rows=[...recent,...rest].slice(0,12).map((v,i)=>({v,recent:i<recent.length}));
       }else{
-        rows=all.map(v=>({v,s:score(v,q)})).filter(x=>x.s<99).sort((a,b)=>a.s-b.s||a.v.localeCompare(b.v,'ja')).slice(0,10);
+        rows=all.map(v=>({v,s:score(v,q)})).filter(x=>x.s<99).sort((a,b)=>a.s-b.s||a.v.localeCompare(b.v,'ja')).slice(0,20);
       }
       if(!rows.length){panel.innerHTML='<div class="pal-search-empty">一致するパルがありません</div>';}
       else{
@@ -79,27 +79,12 @@
       }
     });
 
-    let touchStart=null;
-    panel.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='touch'||e.pointerType==='pen')touchStart={x:e.clientX,y:e.clientY,id:e.pointerId};
-    });
-    panel.addEventListener('pointercancel',()=>{touchStart=null});
-    panel.addEventListener('pointerup',e=>{
+    // Use the browser's native click gesture recognition. A vertical swipe scrolls
+    // the suggestion list and does not select an item; only a real tap/click does.
+    panel.addEventListener('click',e=>{
       const el=e.target.closest('.pal-search-option');
       if(!el)return;
-      if(e.pointerType==='touch'||e.pointerType==='pen'){
-        if(!touchStart||touchStart.id!==e.pointerId)return;
-        const dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y;
-        touchStart=null;
-        if(Math.hypot(dx,dy)>10)return;
-      }
       choose(el.dataset.value);
-    });
-    panel.addEventListener('click',e=>{
-      if(e.detail===0){
-        const el=e.target.closest('.pal-search-option');
-        if(el)choose(el.dataset.value);
-      }
     });
 
     clear.addEventListener('click',()=>{input.value='';input.focus();render()});
