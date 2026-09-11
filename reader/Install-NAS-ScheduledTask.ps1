@@ -19,7 +19,7 @@ if (-not $machineSecret) {
 }
 
 $taskCommand = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + $runner + '" -Root "' + $Root + '"'
-$args = @(
+$taskArgs = @(
   '/Create',
   '/TN', $TaskName,
   '/TR', $taskCommand,
@@ -30,8 +30,10 @@ $args = @(
   '/F'
 )
 
-$p = Start-Process -FilePath 'schtasks.exe' -ArgumentList $args -Wait -PassThru -NoNewWindow
-if ($p.ExitCode -ne 0) { throw ('schtasks.exe failed. ExitCode=' + $p.ExitCode) }
+$schtasks = Join-Path $env:SystemRoot 'System32\schtasks.exe'
+& $schtasks @taskArgs
+$exitCode = $LASTEXITCODE
+if ($exitCode -ne 0) { throw ('schtasks.exe failed. ExitCode=' + $exitCode) }
 
 Write-Host ('Scheduled task installed: ' + $TaskName)
 Write-Host ('Interval: ' + $Minutes + ' minute(s)')
