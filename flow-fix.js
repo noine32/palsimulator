@@ -3,6 +3,7 @@
   const NODE_TOP = 96;
   const TOP_LANE_START = 26;
   const TOP_LANE_GAP = 14;
+  const EDGE_LANE_GAP = 18;
 
   function num(v) { return Number.parseFloat(v || '0'); }
 
@@ -36,6 +37,18 @@
     }
     node.x = x;
     node.y = y;
+  }
+
+  function targetPort(edge, incoming) {
+    if (incoming.length <= 1) return edge.to.y + edge.to.h / 2;
+    const sorted = [...incoming].sort((a, b) => a.from.y - b.from.y || a.from.idx - b.from.idx);
+    const idx = sorted.indexOf(edge);
+    if (sorted.length === 2) {
+      return edge.to.y + edge.to.h * (idx === 0 ? 0.34 : 0.66);
+    }
+    const pad = edge.to.h * 0.2;
+    const span = edge.to.h - pad * 2;
+    return edge.to.y + pad + (span * idx / Math.max(1, sorted.length - 1));
   }
 
   function relayout(svg) {
@@ -83,6 +96,12 @@
         col.forEach((n, i) => moveNode(n, n.oldX, NODE_TOP + offset + i * rowGap));
       }
 
+      const incomingByTarget = new Map();
+      for (const e of edges) {
+        if (!incomingByTarget.has(e.to)) incomingByTarget.set(e.to, []);
+        incomingByTarget.get(e.to).push(e);
+      }
+
       const skipEdges = edges.filter(e => e.to.col - e.from.col > 1);
       skipEdges.sort((a, b) => (a.from.col - b.from.col) || (a.from.y - b.from.y) || (a.to.y - b.to.y));
       const laneFor = new Map(skipEdges.map((e, i) => [e, TOP_LANE_START + i * TOP_LANE_GAP]));
@@ -91,15 +110,21 @@
         const sx = e.from.x + e.from.w;
         const sy = e.from.y + e.from.h / 2;
         const ex = e.to.x;
-        const ey = e.to.y + e.to.h / 2;
+        const incoming = incomingByTarget.get(e.to) || [e];
+        const ey = targetPort(e, incoming);
+        const sorted = [...incoming].sort((a, b) => a.from.y - b.from.y || a.from.idx - b.from.idx);
+        const idx = sorted.indexOf(e);
+        const centered = idx - (sorted.length - 1) / 2;
         const gap = e.to.col - e.from.col;
+
         if (gap > 1) {
           const laneY = laneFor.get(e);
-          const leaveX = sx + 24;
-          const enterX = ex - 24;
+          const leaveX = sx + 26 + centered * EDGE_LANE_GAP;
+          const enterX = ex - 26 - centered * EDGE_LANE_GAP;
           e.path.setAttribute('d', `M${sx} ${sy} H${leaveX} V${laneY} H${enterX} V${ey} H${ex}`);
         } else {
-          const mx = (sx + ex) / 2;
+          const baseMx = (sx + ex) / 2;
+          const mx = baseMx + centered * EDGE_LANE_GAP;
           e.path.setAttribute('d', `M${sx} ${sy} H${mx} V${ey} H${ex}`);
         }
       }
