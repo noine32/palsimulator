@@ -1,0 +1,15 @@
+# Cloudflare local deployment config / state
+cloudflare/wrangler.toml
+.wrangler/
+.dev.vars
+
+# Local secrets / player token maps
+player_tokens.json
+*.tokens.json
+reader/private/
+
+# Player/server data must never be committed
+owned_pals.json
+Player_*/
+Level.sav
+Players/
