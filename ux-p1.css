@@ -1,0 +1,32 @@
+.route-primary{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-bottom:12px}
+.legacy-required,.legacy-breakdowns{display:none!important}
+.other-ways-card{margin-top:12px}
+.other-ways-filters{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 10px}
+.other-ways-filter{border:1px solid var(--line);background:#10161e;color:var(--muted);border-radius:999px;padding:8px 12px;min-height:38px;cursor:pointer}
+.other-ways-filter:hover,.other-ways-filter:focus-visible{border-color:#4b9fe9;color:var(--text);outline:none}
+.other-ways-filter.active{background:#204d78;border-color:#4b9fe9;color:#fff}
+.other-ways-summary{margin:0 0 10px;line-height:1.5}
+.other-ways-list{display:grid;gap:8px}
+.other-way-item{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:11px 12px;background:#10161e;border:1px solid var(--line);border-radius:11px}
+.other-way-main{min-width:0;flex:1}
+.other-way-pair{display:flex;align-items:flex-start;flex-wrap:wrap;gap:4px 7px;font-size:14px;line-height:1.5;font-weight:650}
+.other-way-pair .operator{color:var(--muted);font-weight:400}
+.other-way-detail{margin-top:4px;color:var(--muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.other-way-status{flex:0 0 auto;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:700;line-height:1.2;text-align:center}
+.other-way-status.ready{background:#bff0d6;color:#0e2b1c}
+.other-way-status.one{background:#ffe9a8;color:#3a2d05}
+.other-way-status.missing{background:#ffc9c5;color:#3a0e0c}
+.other-way-status.confirm{background:#ffe0ad;color:#4b2e05}
+.other-ways-empty{padding:14px 12px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);line-height:1.5}
+.other-ways-checks{margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+.other-ways-checks h3{margin:0 0 8px;font-size:14px}
+.other-ways-checks ul{margin:0;padding-left:20px;color:var(--muted);line-height:1.6}
+.other-ways-checks li+li{margin-top:4px}
+.other-ways-checks strong{color:var(--text)}
+@media(max-width:520px){
+  .other-ways-filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .other-ways-filter{width:100%;padding:8px 6px}
+  .other-way-item{padding:10px}
+  .other-way-pair{font-size:13px}
+  .other-way-status{max-width:74px;white-space:normal}
+}

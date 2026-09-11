@@ -34,7 +34,7 @@
       const summary=($('#ownedSummary')?.textContent||'').trim();
       const hasData=summary && summary!=='—' && !/^0体/.test(summary);
       guide.classList.toggle('hidden',Boolean(hasData));
-      routePanel.querySelectorAll(':scope > .grid.two').forEach(x=>x.classList.toggle('hidden',!hasData));
+      routePanel.querySelectorAll(':scope > .grid.two, :scope > .route-primary, :scope > .other-ways-card').forEach(x=>x.classList.toggle('hidden',!hasData));
     };
     sync();
     const ownedSummary=$('#ownedSummary');
