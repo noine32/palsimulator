@@ -26,7 +26,8 @@
     routePanel.prepend(guide);
 
     $('#guideDataBtn')?.addEventListener('click',()=>{
-      $('#dropZone')?.scrollIntoView({behavior:'smooth',block:'start'});
+      $('.tabs .tab[data-tab="data"]')?.click();
+      requestAnimationFrame(()=>$('#dropZone')?.scrollIntoView({behavior:'smooth',block:'start'}));
     });
     $('#demoBtn')?.addEventListener('click',loadDemo);
 
