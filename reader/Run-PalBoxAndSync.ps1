@@ -36,21 +36,43 @@ function Find-ExportRoot([string[]]$Roots) {
   return $null
 }
 
+function Find-ReaderScript([string[]]$Roots) {
+  foreach ($root in $Roots) {
+    if (-not $root -or -not (Test-Path -LiteralPath $root)) { continue }
+
+    $direct = Join-Path $root 'PalBoxCommunityReader.ps1'
+    if (Test-Path -LiteralPath $direct) {
+      return (Resolve-Path -LiteralPath $direct).Path
+    }
+
+    $found = Get-ChildItem -LiteralPath $root -File -Filter 'PalBoxCommunityReader.ps1' -Recurse -ErrorAction SilentlyContinue |
+      Where-Object { $_.FullName -notlike '*\palsimulator\reader\*' } |
+      Sort-Object LastWriteTime -Descending |
+      Select-Object -First 1
+    if ($found) { return $found.FullName }
+  }
+  return $null
+}
+
 $scriptDir = $PSScriptRoot
 $parentDir = Split-Path -Parent $scriptDir
+$grandParentDir = Split-Path -Parent $parentDir
 
 if (-not $ReaderScript) {
-  $nearby = @(
-    (Join-Path $scriptDir 'PalBoxCommunityReader.ps1'),
-    (Join-Path $parentDir 'PalBoxCommunityReader.ps1'),
-    (Join-Path (Split-Path -Parent $parentDir) 'PalBoxCommunityReader.ps1')
-  ) | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
-  if ($nearby) { $ReaderScript = $nearby }
+  $readerSearchRoots = @(
+    $scriptDir,
+    $parentDir,
+    $grandParentDir,
+    'O:\palworld'
+  )
+  $ReaderScript = Find-ReaderScript -Roots $readerSearchRoots
 }
 
 if (-not $ReaderScript -or -not (Test-Path -LiteralPath $ReaderScript)) {
-  throw 'PalBoxCommunityReader.ps1 was not found. Use -ReaderScript to specify the actual file.'
+  throw 'PalBoxCommunityReader.ps1 was not found automatically. Use -ReaderScript to specify the actual file.'
 }
+
+Write-Host "Reader script: $ReaderScript"
 
 $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'Process')
 if (-not $pushSecret) { $pushSecret = [Environment]::GetEnvironmentVariable($PushSecretEnvName, 'User') }
@@ -72,7 +94,8 @@ if (-not $ExportRoot) {
     $readerDir,
     $scriptDir,
     $parentDir,
-    (Split-Path -Parent $parentDir)
+    $grandParentDir,
+    'O:\palworld'
   )
 
   $shareRootTxt = Join-Path $readerDir 'ShareRoot.txt'
