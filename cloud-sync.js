@@ -26,7 +26,33 @@
     status.dataset.kind = kind;
   }
 
+  function waitForGameData(timeoutMs = 20000) {
+    const dataStatus = $('#dataStatus');
+    if (!dataStatus) return Promise.resolve();
+    if (/^OK・/.test(dataStatus.textContent || '')) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const finish = (err) => {
+        if (done) return;
+        done = true;
+        observer.disconnect();
+        clearTimeout(timer);
+        err ? reject(err) : resolve();
+      };
+      const check = () => {
+        const text = dataStatus.textContent || '';
+        if (/^OK・/.test(text)) finish();
+        else if (/取得失敗/.test(text)) finish(new Error('ゲームデータの取得に失敗しています。'));
+      };
+      const observer = new MutationObserver(check);
+      observer.observe(dataStatus, { childList: true, characterData: true, subtree: true });
+      const timer = setTimeout(() => finish(new Error('ゲームデータの準備に時間がかかっています。再度お試しください。')), timeoutMs);
+      check();
+    });
+  }
+
   async function injectAsLocalFile(data) {
+    await waitForGameData();
     const input = document.getElementById('fileInput');
     if (!input) throw new Error('JSON入力欄が見つかりません。');
     const file = new File([JSON.stringify(data)], 'owned_pals.json', { type: 'application/json' });
