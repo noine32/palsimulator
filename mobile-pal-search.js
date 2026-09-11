@@ -50,13 +50,23 @@
       }
       if(!rows.length){panel.innerHTML='<div class="pal-search-empty">一致するパルがありません</div>';}
       else{
-        panel.innerHTML=rows.map((x,i)=>`<button type="button" class="pal-search-option" role="option" data-value="${x.v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}"><span>${x.v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>${x.recent?'<small>最近</small>':''}</button>`).join('');
+        panel.innerHTML=rows.map(x=>`<button type="button" class="pal-search-option" role="option" data-value="${x.v.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}"><span>${x.v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>${x.recent?'<small>最近</small>':''}</button>`).join('');
       }
       panel.classList.remove('hidden');
       input.setAttribute('aria-expanded','true');
     };
     const close=()=>{panel.classList.add('hidden');input.setAttribute('aria-expanded','false')};
-    const choose=value=>{input.value=value;saveRecent(inputId,value);close();input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));if(button&&!button.disabled){button.focus({preventScroll:true})}};
+    const choose=value=>{
+      input.value=value;
+      saveRecent(inputId,value);
+      close();
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+      if(button&&!button.disabled){
+        button.click();
+        input.blur();
+      }
+    };
 
     input.addEventListener('focus',()=>{render();setTimeout(()=>input.scrollIntoView({block:'center',behavior:'smooth'}),80)});
     input.addEventListener('input',render);
@@ -65,7 +75,7 @@
       if(e.key==='Enter'){
         const first=panel.querySelector('.pal-search-option');
         if(!panel.classList.contains('hidden')&&first){e.preventDefault();choose(first.dataset.value);return}
-        if(button&&!button.disabled){e.preventDefault();saveRecent(inputId,input.value);button.click()}
+        if(button&&!button.disabled){e.preventDefault();saveRecent(inputId,input.value);button.click();input.blur()}
       }
     });
     panel.addEventListener('pointerdown',e=>{const el=e.target.closest('.pal-search-option');if(!el)return;e.preventDefault();choose(el.dataset.value)});
