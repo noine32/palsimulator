@@ -1,8 +1,8 @@
-const CACHE='palbreeder-shell-v10-mobile-passive-nav';
+const CACHE='palbreeder-shell-v11-passive-mobile-ux';
 const ELK_URL='https://cdn.jsdelivr.net/npm/elkjs@0.10.0/lib/elk.bundled.js';
 const SHELL=[
   './','./index.html','./styles.css','./ux-p0.css','./ux-p1.css',
-  './mobile-bottom-nav.css','./mobile-owned-list.css','./data-screen.css','./mobile-reverse.css','./mobile-flow.css','./passive-picker.css','./passive-supply.css','./passive-presets.css','./search-owned-badges.css','./polish.css',
+  './mobile-bottom-nav.css','./mobile-owned-list.css','./data-screen.css','./mobile-reverse.css','./mobile-flow.css','./passive-picker.css','./passive-mobile.css','./passive-supply.css','./passive-presets.css','./search-owned-badges.css','./polish.css',
   './data-fetch-cache.js','./passive-note-fix.js','./flow-fix.js','./passive-extension.js','./passive-supply.js','./passive-presets.js','./app.js','./cloud-sync.js','./mobile-pal-search.js','./ux-p0.js','./ux-p1.js','./mobile-bottom-nav.js','./data-screen.js','./mobile-reverse.js','./mobile-flow.js','./passive-picker.js','./pwa.js',
   './manifest.webmanifest','./palbreeder-icon.svg'
 ];

@@ -1,0 +1,41 @@
+.passive-target-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0;padding:10px 12px;background:#10161e;border:1px solid var(--line);border-radius:10px}
+.passive-target-bar>div{display:grid;min-width:0;gap:2px}
+.passive-target-label{color:var(--muted);font-size:11px}
+.passive-target-bar strong{font-size:15px;overflow-wrap:anywhere}
+.passive-target-bar small{font-size:11px}
+.passive-target-change{flex:0 0 auto;white-space:nowrap}
+.passive-chart-actions{display:flex;align-items:center;gap:8px}
+.passive-flow-toggle{display:none}
+.passive-step-list{display:none;list-style:none;margin:10px 0 0;padding:0}
+.passive-step-card{display:flex;align-items:flex-start;gap:9px;margin:0 0 9px;padding:10px 11px;background:#10161e;border:1px solid var(--line);border-radius:11px}
+.passive-step-no{display:flex;flex:0 0 26px;width:26px;height:26px;align-items:center;justify-content:center;border-radius:50%;background:var(--accent2);color:#fff;font-size:12px;font-weight:700}
+.passive-step-main{display:grid;min-width:0;flex:1;gap:3px}
+.passive-step-parents{display:flex;flex-wrap:wrap;gap:3px 6px;font-size:12.5px;line-height:1.4}
+.passive-step-parents em{font-style:normal;color:var(--muted)}
+.passive-step-child{color:#ffe28a;font-size:13.5px;font-weight:700;line-height:1.4}
+.passive-step-main small{color:var(--muted);font-size:11px;line-height:1.35;overflow-wrap:anywhere}
+.passive-step-status{flex:0 0 auto;max-width:94px;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:700;line-height:1.25;text-align:center;overflow-wrap:anywhere}
+.passive-step-status.good{background:#bff0d6;color:#0e2b1c}
+.passive-step-status.warn{background:#ffe9a8;color:#3a2d05}
+.passive-step-status.bad{background:#ffc9c5;color:#3a0e0c}
+.passive-step-list.empty{display:none!important}
+@media(max-width:900px){
+  .passive-target-bar{align-items:stretch;flex-direction:column;gap:8px}
+  .passive-target-change{width:100%;min-height:44px}
+  .passive-result-table{display:none}
+  .passive-step-list{display:block}
+  .passive-chart-head{align-items:stretch;flex-direction:column}
+  .passive-chart-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .passive-chart-actions .button{width:100%;min-height:44px}
+  .passive-flow-toggle{display:block}
+  .passive-flow-diagram{display:none;margin-top:12px}
+  .passive-flow-diagram.is-mobile-open{display:grid}
+  .passive-flow-diagram .flow-viewport{width:100%;overflow:hidden}
+  .passive-flow-diagram svg{width:100%;height:auto;min-width:0}
+  .passive-flow-diagram .detail-panel{display:none}
+}
+@media(max-width:520px){
+  .passive-chart-actions{grid-template-columns:1fr}
+  .passive-step-card{padding:9px;gap:7px}
+  .passive-step-status{max-width:78px;padding:4px 5px}
+}

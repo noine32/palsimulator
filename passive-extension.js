@@ -109,6 +109,7 @@
     const panel=document.createElement('section'); panel.id='tab-passive'; panel.className='tab-panel';
     panel.innerHTML=`<article class="card">
       <div class="card-title"><div><h2>最大4パッシブ継承</h2><p class="muted">所持個体のパッシブから、目的パルへ集約する配合候補を探索します。</p></div><span id="passiveReady" class="badge">準備中</span></div>
+      <div class="passive-target-bar"><div><span class="passive-target-label">目的パル</span><strong id="passiveTargetName">未選択</strong><small id="passiveTargetMeta" class="muted">上部の検索欄から目的パルを選択してください。</small></div><button id="passiveTargetChange" type="button" class="button passive-target-change">目的パルを変更</button></div>
       <div class="passive-ext-grid">
         <label><span>プリセット</span><select id="presetSelect"></select></label>
         <label><span>パッシブ1</span><select class="passiveSelect"></select></label>
@@ -118,14 +119,56 @@
         <button id="passiveSearchBtn" class="button primary" disabled>パッシブルート検索</button>
       </div>
       <p id="passiveNote" class="muted">ゲームデータと所持JSONを読み込んでください。</p>
-      <div class="table-wrap"><table><thead><tr><th>手順</th><th>親1</th><th>親2</th><th>子</th><th>保持したいパッシブ</th></tr></thead><tbody id="passiveBody"></tbody></table></div>
-      <div class="card-title passive-chart-head"><h2>パッシブ継承フローチャート</h2><button id="passivePngBtn" class="button">PNG保存</button></div>
-      <div class="flow-layout"><div class="flow-viewport"><svg id="passiveFlowSvg" xmlns="http://www.w3.org/2000/svg"></svg></div><aside id="passiveFlowDetail" class="detail-panel"><h3>継承ノード詳細</h3><p class="muted">ルート検索後、箱をクリックしてください。</p></aside></div>
+      <ol id="passiveCards" class="passive-step-list"></ol>
+      <div class="table-wrap passive-result-table"><table><thead><tr><th>手順</th><th>親1</th><th>親2</th><th>子</th><th>保持したいパッシブ</th></tr></thead><tbody id="passiveBody"></tbody></table></div>
+      <div class="card-title passive-chart-head"><h2>パッシブ継承フローチャート</h2><div class="passive-chart-actions"><button id="passiveFlowToggle" type="button" class="button passive-flow-toggle" aria-expanded="false">全体図を見る</button><button id="passivePngBtn" class="button">PNG保存</button></div></div>
+      <div id="passiveFlowDiagram" class="flow-layout passive-flow-diagram"><div class="flow-viewport"><svg id="passiveFlowSvg" xmlns="http://www.w3.org/2000/svg"></svg></div><aside id="passiveFlowDetail" class="detail-panel"><h3>継承ノード詳細</h3><p class="muted">ルート検索後、箱をクリックしてください。</p></aside></div>
     </article>`;
     reversePanel?.parentNode.insertBefore(panel,reversePanel);
     const style=document.createElement('style');
     style.textContent=`.passive-ext-grid{display:grid;grid-template-columns:1.25fr repeat(4,1fr) auto;gap:8px;align-items:end;margin:12px 0}.passive-ext-grid label span{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.passive-chart-head{margin-top:16px}@media(max-width:1050px){.passive-ext-grid{grid-template-columns:1fr 1fr 1fr}.passive-ext-grid .button{grid-column:span 3}}@media(max-width:620px){.passive-ext-grid{grid-template-columns:1fr}.passive-ext-grid .button{grid-column:auto}}`;
     document.head.appendChild(style);
+    $('#passiveTargetChange')?.addEventListener('click',()=>{
+      const input=$('#targetInput');
+      if(!input)return;
+      $('.target-card')?.scrollIntoView({behavior:'smooth',block:'start'});
+      setTimeout(()=>{if(window.matchMedia?.('(max-width:900px)').matches)input.click();else{input.focus();input.select()}},220);
+    });
+    $('#passiveFlowToggle')?.addEventListener('click',()=>{
+      const button=$('#passiveFlowToggle'),diagram=$('#passiveFlowDiagram');
+      if(!button||!diagram)return;
+      const open=diagram.classList.toggle('is-mobile-open');
+      button.setAttribute('aria-expanded',String(open));
+      button.textContent=open?'全体図を閉じる':'全体図を見る';
+    });
+    $('#targetInput')?.addEventListener('input',syncPassiveTarget);
+    $('#targetInput')?.addEventListener('change',syncPassiveTarget);
+    syncPassiveTarget();
+  }
+
+  function syncPassiveTarget(){
+    const name=$('#passiveTargetName'),meta=$('#passiveTargetMeta');
+    if(!name||!meta)return;
+    const value=$('#targetInput')?.value?.trim();
+    const target=eng?.resolve(value||'');
+    if(!target){name.textContent='未選択';meta.textContent='上部の検索欄から目的パルを選択してください。';return;}
+    name.textContent=eng.label(target);
+    meta.textContent='この目的パルへパッシブを集約します。';
+  }
+
+  function renderPassiveCards(){
+    const list=$('#passiveCards'),body=$('#passiveBody');
+    if(!list||!body)return;
+    const rows=[...body.querySelectorAll('tr')];
+    list.innerHTML=rows.map(row=>{
+      const cells=[...row.children].map(cell=>cell.textContent.trim());
+      if(cells.length<5)return'';
+      const [step,left,right,child,status]=cells;
+      const tone=status==='すぐ可能'?'good':/未所持|必要|合わない/.test(status)?'bad':'warn';
+      const icon=tone==='good'?'✓':tone==='bad'?'＋':'!';
+      return `<li class="passive-step-card"><span class="passive-step-no">${esc(step)}</span><div class="passive-step-main"><div class="passive-step-parents"><span>${esc(left)}</span><em>×</em><span>${esc(right)}</span></div><div class="passive-step-child">→ ${esc(child)}</div><small>${esc(cells[4])}</small></div><span class="passive-step-status ${tone}">${icon} ${esc(status)}</span></li>`;
+    }).join('');
+    list.classList.toggle('empty',!rows.length);
   }
 
   function buildOptions(){
@@ -145,6 +188,7 @@
     const ready=Boolean(eng && owned.individuals.length);
     const b=$('#passiveSearchBtn'); if(b)b.disabled=!ready;
     const badge=$('#passiveReady'); if(badge)badge.textContent=eng?(owned.individuals.length?'利用可能':'所持JSON待ち'):'準備中';
+    syncPassiveTarget();
     if(ready && $('#passiveNote')) $('#passiveNote').textContent='最大4つまで選択できます。目的パルは上部の検索欄を使用します。';
     window.dispatchEvent(new CustomEvent('palbreeder:passive-state',{detail:{eng,owned}}));
   }
@@ -213,9 +257,10 @@
     setTimeout(()=>{
       try{
         const r=multiPassivePlan(desired,target);
-        if(r.missing.length){$('#passiveBody').innerHTML='';$('#passiveNote').textContent='所持個体に供給元がないパッシブ: '+r.missing.map(x=>eng.passiveName(x)).join(' / ');return;}
-        if(!r.score){$('#passiveBody').innerHTML='';$('#passiveNote').textContent='探索範囲内で目的パルへ集約する候補が見つかりませんでした。';return;}
+        if(r.missing.length){$('#passiveBody').innerHTML='';renderPassiveCards();$('#passiveNote').textContent='所持個体に供給元がないパッシブ: '+r.missing.map(x=>eng.passiveName(x)).join(' / ');return;}
+        if(!r.score){$('#passiveBody').innerHTML='';renderPassiveCards();$('#passiveNote').textContent='探索範囲内で目的パルへ集約する候補が見つかりませんでした。';return;}
         $('#passiveBody').innerHTML=r.steps.map(([l,rr,s],i)=>`<tr><td>${i+1}</td><td>${esc(eng.label(l[0]))}</td><td>${esc(eng.label(rr[0]))}</td><td>${esc(eng.label(s[0]))}</td><td>${esc(maskText(s[1],desired))}</td></tr>`).join('');
+        renderPassiveCards();
         $('#passiveNote').textContent=`狙うパッシブ: ${desired.map(x=>eng.passiveName(x)).join(' / ')}。候補: 配合 ${r.score[0]}回 / ${r.score[1]}世代。継承はランダムなので、各段階で目的パッシブを継承した子を選別してください。`;
         drawPassiveFlow(target,r.steps,desired);
       } finally { refresh(); }
