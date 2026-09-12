@@ -27,6 +27,7 @@
 
   let eng = null;
   let owned = {counts:new Map(), individuals:[]};
+  let pendingOwnedFile = null;
 
   class Engine {
     constructor(palsObj,specials,idmap,palData,passiveData){
@@ -136,8 +137,9 @@
 
   async function loadOwned(file){
     try{
+      if(!eng){pendingOwnedFile=file;return;}
       const data=JSON.parse(await file.text());
-      if(data.schema!=='palbreeder-owned-pals-v1' || !eng) return;
+      if(data.schema!=='palbreeder-owned-pals-v1') return;
       const x={counts:new Map(),individuals:[]};
       for(const r of data.pals||[]){
         const n=eng.internalToName(String(r.internal_id||'')); if(!n)continue;
@@ -240,11 +242,12 @@
 
   async function init(){
     injectUi();
-    try{
-      const[p,s,i,d,ps]=await Promise.all(Object.values(SOURCES).map(getJson));eng=new Engine(p,s,i,d,ps);buildOptions();
-    }catch(e){const note=$('#passiveNote');if(note)note.textContent='パッシブ用データの取得に失敗しました: '+e.message;}
     const fi=$('#fileInput');fi?.addEventListener('change',e=>e.target.files[0]&&loadOwned(e.target.files[0]));
     $('#dropZone')?.addEventListener('drop',e=>{const f=e.dataTransfer?.files?.[0];if(f)loadOwned(f);});
+    try{
+      const[p,s,i,d,ps]=await Promise.all(Object.values(SOURCES).map(getJson));eng=new Engine(p,s,i,d,ps);buildOptions();
+      if(pendingOwnedFile){const file=pendingOwnedFile;pendingOwnedFile=null;await loadOwned(file);}
+    }catch(e){const note=$('#passiveNote');if(note)note.textContent='パッシブ用データの取得に失敗しました: '+e.message;}
   }
 
   init();
