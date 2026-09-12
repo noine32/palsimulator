@@ -57,6 +57,7 @@
   function install(svg, exportButtonId) {
     let revision = 0;
     let snapshot = capture(svg);
+    let scale = 1;
     const note = document.createElement('p');
     note.className = 'muted flow-layout-note';
     note.setAttribute('role', 'status');
@@ -64,6 +65,26 @@
     const exportButton = document.getElementById(exportButtonId);
     const diagram = svg.closest('.flow-layout');
     const passiveToggle = svg.id === 'passiveFlowSvg' ? document.getElementById('passiveFlowToggle') : null;
+    const viewport = diagram?.querySelector('.flow-viewport');
+    const zoomControls = document.createElement('div');
+    zoomControls.className = 'flow-zoom-controls';
+    zoomControls.innerHTML = '<span>表示倍率</span><button type="button" class="button" data-flow-zoom="out" aria-label="フローチャートを縮小">−</button><button type="button" class="button" data-flow-zoom="reset">100%</button><button type="button" class="button" data-flow-zoom="in" aria-label="フローチャートを拡大">＋</button>';
+    diagram?.insertBefore(zoomControls, viewport || null);
+
+    const applyScale = () => {
+      svg.style.width = `${Math.round(scale * 100)}%`;
+      svg.style.height = 'auto';
+      svg.style.minWidth = '0';
+      const resetButton = zoomControls.querySelector('[data-flow-zoom="reset"]');
+      if (resetButton) resetButton.textContent = `${Math.round(scale * 100)}%`;
+    };
+    zoomControls.addEventListener('click', event => {
+      const button = event.target.closest('[data-flow-zoom]');
+      if (!button) return;
+      const action = button.dataset.flowZoom;
+      scale = action === 'in' ? Math.min(1.8, scale + 0.2) : action === 'out' ? Math.max(0.6, scale - 0.2) : 1;
+      applyScale();
+    });
 
     const syncVisibility = hasFlow => {
       diagram?.classList.toggle('has-flow', hasFlow);
@@ -110,6 +131,7 @@
         svg.setAttribute('viewBox', `0 0 ${graph.width} ${graph.height}`);
         svg.setAttribute('width', graph.width);
         svg.setAttribute('height', graph.height);
+        applyScale();
         note.textContent = '親から子へ矢印をたどれます。';
       } catch (_) {
         if (currentRevision === revision) note.textContent = '自動配置を利用できないため、通常の図を表示しています。';

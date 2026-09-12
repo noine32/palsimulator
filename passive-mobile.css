@@ -36,7 +36,7 @@
   .passive-flow-toggle{display:block}
   .passive-flow-diagram.has-flow{display:none;margin-top:12px}
   .passive-flow-diagram.has-flow.is-mobile-open{display:grid}
-  .passive-flow-diagram .flow-viewport{width:100%;overflow:hidden}
+  .passive-flow-diagram .flow-viewport{width:100%;overflow:auto}
   .passive-flow-diagram svg{width:100%;height:auto;min-width:0}
   .passive-flow-diagram .detail-panel{display:none}
 }
