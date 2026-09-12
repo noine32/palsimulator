@@ -119,6 +119,11 @@
         <button id="passiveSearchBtn" class="button primary" disabled>パッシブルート検索</button>
       </div>
       <p id="passiveNote" class="muted">ゲームデータと所持JSONを読み込んでください。</p>
+      <div id="passiveTaskGuide" class="passive-task-guide">
+        <div id="passiveNextAction" class="flow-next-action muted">パッシブルート検索後に手順が表示されます。</div>
+        <div class="passive-task-tools"><button id="passiveResetChecks" type="button" class="button" disabled>進捗をリセット</button></div>
+        <ol id="passiveTaskList" class="flow-task-list passive-task-list"></ol>
+      </div>
       <ol id="passiveCards" class="passive-step-list"></ol>
       <div class="table-wrap passive-result-table"><table><thead><tr><th>手順</th><th>親1</th><th>親2</th><th>子</th><th>保持したいパッシブ</th></tr></thead><tbody id="passiveBody"></tbody></table></div>
       <div class="card-title passive-chart-head"><h2>パッシブ継承フローチャート</h2><div class="passive-chart-actions"><button id="passiveFlowToggle" type="button" class="button passive-flow-toggle" aria-expanded="false">全体図を見る</button><button id="passivePngBtn" class="button">PNG保存</button></div></div>

@@ -20,11 +20,16 @@
 .passive-step-status.bad{background:#ffc9c5;color:#3a0e0c}
 .passive-step-list.empty{display:none!important}
 .passive-flow-diagram:not(.has-flow){display:none}
+.passive-task-guide{display:none}
+.passive-task-tools{display:flex;justify-content:flex-end;margin-top:6px}
+.passive-task-tools .button{min-height:38px}
 @media(max-width:900px){
   .passive-target-bar{align-items:stretch;flex-direction:column;gap:8px}
   .passive-target-change{width:100%;min-height:44px}
   .passive-result-table{display:none}
   .passive-step-list{display:block}
+  .passive-task-guide{display:block;margin-top:10px}
+  .passive-task-list{margin-top:8px}
   .passive-chart-head{align-items:stretch;flex-direction:column}
   .passive-chart-actions{display:grid;grid-template-columns:1fr 1fr;width:100%}
   .passive-chart-actions .button{width:100%;min-height:44px}
