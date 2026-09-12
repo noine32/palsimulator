@@ -1,0 +1,9 @@
+.planner-mode{display:flex;gap:6px;margin-top:12px;padding:4px;background:#10161e;border:1px solid var(--line);border-radius:10px}
+.planner-mode-button{flex:1;min-width:0;min-height:40px;padding:8px 10px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer;font-size:13px}
+.planner-mode-button.active{background:#1d3349;border-color:#3f6283;color:#b8dcff;font-weight:700}
+.planner-mode-button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.planner-mode-note{display:block;margin-top:6px;color:var(--muted);font-size:11px}
+@media(max-width:520px){
+  .planner-mode-button{min-height:44px;font-size:12px}
+  .planner-mode-note{line-height:1.4}
+}
