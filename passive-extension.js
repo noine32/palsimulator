@@ -11,6 +11,8 @@
     '（手動選択）': [],
     '拠点・最高作業速度': ['WorldTree_CraftSpeed','CraftSpeed_up3','CraftSpeed_up2','PAL_CorporateSlave'],
     '拠点・標準作業速度': ['CraftSpeed_up3','CraftSpeed_up2','PAL_CorporateSlave','CraftSpeed_up1'],
+    '拠点・作業適性': ['WorkSuitabilityAddRank_MonsterFarm_2','WorkSuitabilityAddRank_MonsterFarm_1'],
+    '配合牧場': ['MutationPal_Babysitter','Test_PalEgg_HatchingSpeed_Up'],
     '戦闘・汎用安定': ['MutationPal_Immortal','PAL_ALLAttack_up3','CoolTimeReduction_Up_1','Legend'],
     '戦闘・最大火力': ['WorldTree_ATK','PAL_ALLAttack_up3','PAL_ALLAttack_up2','Legend'],
     'レイド・耐久': ['MutationPal_Immortal','Deffence_up3','Legend','CoolTimeReduction_Up_1'],

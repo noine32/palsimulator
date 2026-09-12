@@ -16,6 +16,20 @@
       positiveEffects: ['CraftSpeed'],
       allowFallback: false
     },
+    '拠点・作業適性': {
+      description: '拠点作業向け：作業適性をプラスする効果だけを優先',
+      preferred: ['WorkSuitabilityAddRank_MonsterFarm_2', 'WorkSuitabilityAddRank_MonsterFarm_1'],
+      patterns: [{re: /作業適性|worksuitability|work.?suitability/i, weight: 1, label: '作業適性'}],
+      positiveEffects: [/^WorkSuitabilityAddRank_/],
+      allowFallback: false
+    },
+    '配合牧場': {
+      description: '配合牧場向け：タマゴ生成・孵化速度をプラスする効果だけを優先',
+      preferred: ['MutationPal_Babysitter', 'Test_PalEgg_HatchingSpeed_Up'],
+      patterns: [{re: /タマゴ|孵化|配合|breed|hatch/i, weight: 1, label: '配合・孵化速度'}],
+      positiveEffects: ['BreedSpeed', 'BreedSpeed_InBaseCamp', 'PalEggHatchingSpeed'],
+      allowFallback: false
+    },
     '戦闘・汎用安定': {
       description: '戦闘向け：攻撃・耐久・クールタイムのプラス効果を優先',
       preferred: ['MutationPal_Immortal', 'PAL_ALLAttack_up3', 'CoolTimeReduction_Up_1', 'Legend'],
@@ -182,10 +196,7 @@
   function recommendationFit(row, profile) {
     if (!profile.patterns.length) return 0;
     const passive = state.eng?.passives?.[row.id] || {};
-    if (profile.positiveEffects?.length && !profile.positiveEffects.some(pattern => (passive.effects || []).some(effect => {
-      const matches = pattern instanceof RegExp ? pattern.test(effect.type) : pattern === effect.type;
-      return matches && Number(effect.value) > 0;
-    }))) return 0;
+    if (profile.positiveEffects?.length && !positiveEffects(row, profile).length) return 0;
     const text = `${row.id} ${row.name} ${passive.desc || ''}`;
     if (profile.exclude?.some(pattern => pattern.test(text))) return 0;
     return profile.patterns.reduce((score, pattern) => {
@@ -207,6 +218,45 @@
     return [...new Set(labels)].join('・') || '所持状況順で補完';
   }
 
+  function effectMatches(effect, pattern) {
+    return (pattern instanceof RegExp ? pattern.test(effect.type) : pattern === effect.type) && Number(effect.value) > 0;
+  }
+
+  function positiveEffects(row, profile) {
+    return (state.eng?.passives?.[row.id]?.effects || [])
+      .filter(effect => profile.positiveEffects?.some(pattern => effectMatches(effect, pattern)));
+  }
+
+  function effectLabel(type) {
+    if (type === 'CraftSpeed') return '作業速度';
+    if (type === 'MoveSpeed') return '移動速度';
+    if (type === 'SwimSpeed') return '水上移動速度';
+    if (type === 'PalSP_Increase') return '最大スタミナ';
+    if (type === 'ShotAttack') return '攻撃';
+    if (type === 'Defense') return '防御';
+    if (type === 'ActiveSkillCoolTime_Decrease') return 'クールタイム短縮';
+    if (type === 'LifeSteal') return 'ダメージ吸収';
+    if (type === 'AutoHPRegeneRate') return 'HP自然回復';
+    if (type === 'BreedSpeed' || type === 'BreedSpeed_InBaseCamp') return 'タマゴ生成速度';
+    if (type === 'PalEggHatchingSpeed') return '孵化速度';
+    if (/^WorkSuitabilityAddRank_/.test(type)) return '作業適性';
+    if (/^ElementBoost_/.test(type)) return '属性攻撃';
+    if (/^ElementResist_/.test(type)) return '属性耐性';
+    if (/^RideJumpCount_/.test(type)) return 'ライドジャンプ回数';
+    return type;
+  }
+
+  function recommendationEffectSummary(row, purpose) {
+    const profile = RECOMMENDATION_PROFILES[purpose] || RECOMMENDATION_PROFILES['所持状況優先'];
+    const effects = positiveEffects(row, profile);
+    if (!effects.length || purpose === '所持状況優先') return '';
+    return [...new Map(effects.map(effect => [effect.type, effect])).values()].map(effect => {
+      const value = Number(effect.value);
+      const suffix = /Rank_|JumpCount_/.test(effect.type) ? '' : '%';
+      return `${effectLabel(effect.type)} ${value > 0 ? '+' : ''}${value}${suffix}`;
+    }).join(' / ');
+  }
+
   function recommendationSources(row) {
     const names = (row.sources || []).map(species => state.eng?.label?.(species) || species);
     if (!names.length) return '供給元情報なし';
@@ -223,7 +273,7 @@
     const coverage = recommendation.fallbackCount
       ? `用途一致 ${recommendation.matchedCount}種類 + 所持状況順 ${recommendation.fallbackCount}枠`
       : `選択 ${recommendation.rows.length}枠`;
-    recommendationDetails.innerHTML = `<div class="owned-passive-recommendation-details-head"><strong>選定理由・供給元</strong><span class="muted">${esc(coverage)}</span></div>${recommendation.rows.map(row => `<article class="owned-passive-recommendation-card"><div class="owned-passive-recommendation-card-head"><strong>${esc(row.name)}</strong><span>${row.count}体 / ${row.species}種</span></div><p>${esc(recommendationReason(row, purpose))}</p><p class="muted">供給元：${esc(recommendationSources(row))}</p></article>`).join('')}`;
+    recommendationDetails.innerHTML = `<div class="owned-passive-recommendation-details-head"><strong>選定理由・供給元</strong><span class="muted">${esc(coverage)}</span></div>${recommendation.rows.map(row => `<article class="owned-passive-recommendation-card"><div class="owned-passive-recommendation-card-head"><strong>${esc(row.name)}</strong><span>${row.count}体 / ${row.species}種</span></div><p>${esc(recommendationReason(row, purpose))}</p>${recommendationEffectSummary(row, purpose) ? `<p class="owned-passive-recommendation-effect">効果：${esc(recommendationEffectSummary(row, purpose))}</p>` : ''}<p class="muted">供給元：${esc(recommendationSources(row))}</p></article>`).join('')}`;
   }
 
   function clearRecommendationDetails() {
