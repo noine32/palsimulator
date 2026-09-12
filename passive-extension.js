@@ -20,6 +20,14 @@
     '移動・水上': ['SwimSpeed_up_3','SwimSpeed_up_2','SwimSpeed_up_1','Stamina_Up_1']
   };
 
+  // These are the internal names used by pal_data.json. A mount can belong
+  // to more than one category, such as Chillet (ground / water).
+  const MOVEMENT_MOUNT_IDS = {
+    ground: new Set('Boar Alpaca Garm WeaselDragon Deer Kirin FlameBuffalo NaughtyCat MopKing PurpleSpider Deer_Ground KingAlpaca FlowerDinosaur Serpent_Ground IceSeal FengyunDeeper GrassMammoth FeatherOstrich FireKirin ThunderDog IceDeer ThunderDog_Ice GrassPanda SakuraSaurus Manticore FlowerDinosaur_Electric FireKirin_Dark GrassPanda_Electric TropicalOstrich Manticore_Dark Plesiosaur GhostBeast MushroomDragon MushroomDragon_Dark WeaselDragon_Fire ElecPanda GrassMammoth_Ice GuardianDog WhiteAlienDragon VolcanicMonster IceNarwhal VolcanicMonster_Ice SakuraSaurus_Water LazyDragon Yeti KingAlpaca_Ice KingBahamut LazyDragon_Electric GrassGolem Yeti_Grass SumoDog GoldenHorse WhiteDeer IceSeal_Ground KingBahamut_Dragon FengyunDeeper_Electric AmaterasuWolf NightBlueHorse BlueThunderHorse AmaterasuWolf_Dark Umihebi_Fire WhiteShieldDragon SaintCentaur BlackCentaur Kirin_Ice GrassGolem_Dark VolcanoDragon_Ice LegendDeer IceNarwhal_Fire LotusDragon SnowTigerBeastman CubeTurtle_Neutral NightBlueHorse_Neutral WhiteDeer_Dark DomeArmorDragon'.split(' ')),
+    flight: new Set('KingWhale HawkBird FairyDragon BirdDragon BirdDragon_Ice HadesBird ThunderBird FairyDragon_Water RedArmorBird SkyDragon BlackMetalDragon Suzaku Suzaku_Water SkyDragon_Grass HadesBird_Electric BlackGriffon MoonQueen Horus Horus_Water IceHorse IceHorse_Dark ThunderFluffyBird DarkMechaDragon GhostDragon JetDragon ThunderBird_Ice ThiefBird GhostDragon_Fire BlueSkyDragon'.split(' ')),
+    water: new Set('KingWhale WeaselDragon Serpent BlueDragon IceSeal BlueDragon_Ice GhostAnglerfish FairyDragon_Water Umihebi GhostAnglerfish_Fire IceNarwhal SakuraSaurus_Water Suzaku_Water LazyDragon PoseidonOrca KingSunfish KingSunfish_Thunder IceNarwhal_Fire LotusDragon BlueSkyDragon'.split(' '))
+  };
+
   const $ = s => document.querySelector(s);
   const $$ = s => [...document.querySelectorAll(s)];
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -52,12 +60,15 @@
       }
       this.passives={};
       for(const [id,rec] of Object.entries(passiveData||{})) this.passives[id]={name:rec?.I18n?.ja?.Name||rec?.I18n?.en?.Name||id,desc:rec?.I18n?.ja?.Description||''};
+      this.movement={};
+      for(const name of this.names) this.movement[name]=Object.entries(MOVEMENT_MOUNT_IDS).filter(([,ids])=>ids.has(name)).map(([type])=>type);
       this.cache=new Map();
     }
     pairKey(a,b){return[a,b].sort().join('\0');}
     jp(n){return this.jpByDeck[this.info[n]?.deck]||n;}
     label(n){const d=this.info[n];return d?.deck?`${this.jp(n)} #${d.deck}`:this.jp(n);}
     passiveName(id){return this.passives[id]?.name||id;}
+    movementTypes(name){return [...(this.movement[name]||[])];}
     result(a,b){
       const k=this.pairKey(a,b); if(this.cache.has(k)) return this.cache.get(k);
       let child;

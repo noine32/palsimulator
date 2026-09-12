@@ -81,9 +81,12 @@
     }
   };
   const RECOMMENDATION_KEYS = Object.keys(RECOMMENDATION_PROFILES);
+  const MOVEMENT_PURPOSES = {ground: '移動・地上', flight: '移動・飛行', water: '移動・水上'};
+  const MOVEMENT_LABELS = {ground: '地上', flight: '飛行', water: '水上'};
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+  const norm = value => String(value ?? '').normalize('NFKC').replace(/[\u3041-\u3096]/g, char => String.fromCharCode(char.charCodeAt(0) + 0x60)).toLowerCase().trim();
 
   let state = {eng: null, owned: null};
   let preset = null;
@@ -93,6 +96,9 @@
   let recommendButton = null;
   let purposeSelect = null;
   let purposeNote = null;
+  let movementHint = null;
+  let targetInput = null;
+  let autoPurpose = null;
   let nameInput = null;
   let saveButton = null;
   let deleteButton = null;
@@ -237,6 +243,51 @@
     purposeNote.textContent = profile.description || '';
   }
 
+  function exactTarget() {
+    const value = targetInput?.value?.trim();
+    if (!value || !state.eng?.resolve) return null;
+    const target = state.eng.resolve(value);
+    if (!target) return null;
+    const info = state.eng.info?.[target];
+    const candidates = [target, state.eng.jp?.(target), info?.deck, `#${info?.deck || ''}`, state.eng.label?.(target)];
+    return candidates.some(candidate => candidate && norm(candidate) === norm(value)) ? target : null;
+  }
+
+  function refreshMovementHint() {
+    if (!movementHint || !purposeSelect) return;
+    if (!state.eng || !targetInput?.value?.trim()) {
+      movementHint.textContent = '目的パルを確定すると、移動タイプに合うおすすめ用途を自動選択します。';
+      return;
+    }
+    const target = exactTarget();
+    if (!target) {
+      movementHint.textContent = '目的パルを候補から確定すると、移動タイプを判定できます。';
+      return;
+    }
+    const types = state.eng.movementTypes?.(target) || [];
+    const current = purposeSelect?.value || '所持状況優先';
+    const canAutoSelect = current === '所持状況優先' || current === '移動マウント' || current === autoPurpose;
+    if (!types.length) {
+      if (canAutoSelect) {
+        purposeSelect.value = '所持状況優先';
+        autoPurpose = '所持状況優先';
+        refreshPurposeNote();
+      }
+      movementHint.textContent = `${state.eng.label(target)} はマウント区分を判定できません。おすすめ用途を手動で選択してください。`;
+      return;
+    }
+    const primaryType = types[0];
+    const suggestedPurpose = MOVEMENT_PURPOSES[primaryType];
+    if (canAutoSelect && suggestedPurpose) {
+      purposeSelect.value = suggestedPurpose;
+      autoPurpose = suggestedPurpose;
+      refreshPurposeNote();
+    }
+    const labels = types.map(type => MOVEMENT_LABELS[type]).filter(Boolean);
+    const multiple = labels.length > 1;
+    movementHint.textContent = `${state.eng.label(target)}：${labels.join(' / ')}${multiple ? `対応。${suggestedPurpose}を仮選択しました。必要に応じて変更してください。` : `マウント。${suggestedPurpose}を自動選択しました。`}`;
+  }
+
   function renderCustomOptions() {
     if (!preset) return;
     if (!customGroup || customGroup.parentElement !== preset) {
@@ -268,6 +319,7 @@
     recommendButton.disabled = !rows.length;
     purposeSelect.disabled = !rows.length;
     refreshPurposeNote();
+    refreshMovementHint();
     saveButton.disabled = !selectedIds().length;
     deleteButton.disabled = !customForValue(preset.value);
   }
@@ -281,7 +333,7 @@
     const tools = document.createElement('div');
     tools.id = 'ownedPassivePresetTools';
     tools.className = 'owned-passive-preset-tools';
-    tools.innerHTML = `<div class="owned-passive-preset-head"><div><strong>所持パッシブから設定</strong><p id="ownedPassiveSummary" class="muted">所持データを読み込むと、所持中のパッシブからおすすめを作成できます。</p></div><div class="owned-passive-preset-actions"><label class="owned-passive-purpose"><span>おすすめ用途</span><select id="ownedPassivePurpose">${RECOMMENDATION_KEYS.map(key => `<option value="${key}">${key}</option>`).join('')}</select><small id="ownedPassivePurposeNote"></small></label><button id="recommendOwnedPresetBtn" type="button" class="button">この用途でおすすめ</button></div></div><p id="ownedPassivePresetResult" class="muted" aria-live="polite"></p><div id="ownedPassivePresetDetails" class="owned-passive-preset-details" aria-live="polite"></div><details class="passive-preset-manager"><summary>自分のプリセットを保存・管理</summary><div class="passive-preset-manager-row"><input id="customPresetName" type="text" maxlength="40" placeholder="例：今あるパル・拠点用"><button id="savePassivePresetBtn" type="button" class="button">現在の構成を保存</button><button id="deletePassivePresetBtn" type="button" class="button">選択中を削除</button></div><p class="muted">保存するのはパッシブ構成だけです。所持データやトークンは保存・送信しません。</p></details>`;
+    tools.innerHTML = `<div class="owned-passive-preset-head"><div><strong>所持パッシブから設定</strong><p id="ownedPassiveSummary" class="muted">所持データを読み込むと、所持中のパッシブからおすすめを作成できます。</p><p id="ownedPassiveMovementHint" class="owned-passive-movement-hint muted">目的パルを確定すると、移動タイプに合うおすすめ用途を自動選択します。</p></div><div class="owned-passive-preset-actions"><label class="owned-passive-purpose"><span>おすすめ用途</span><select id="ownedPassivePurpose">${RECOMMENDATION_KEYS.map(key => `<option value="${key}">${key}</option>`).join('')}</select><small id="ownedPassivePurposeNote"></small></label><button id="recommendOwnedPresetBtn" type="button" class="button">この用途でおすすめ</button></div></div><p id="ownedPassivePresetResult" class="muted" aria-live="polite"></p><div id="ownedPassivePresetDetails" class="owned-passive-preset-details" aria-live="polite"></div><details class="passive-preset-manager"><summary>自分のプリセットを保存・管理</summary><div class="passive-preset-manager-row"><input id="customPresetName" type="text" maxlength="40" placeholder="例：今あるパル・拠点用"><button id="savePassivePresetBtn" type="button" class="button">現在の構成を保存</button><button id="deletePassivePresetBtn" type="button" class="button">選択中を削除</button></div><p class="muted">保存するのはパッシブ構成だけです。所持データやトークンは保存・送信しません。</p></details>`;
     grid.after(tools);
 
     summary = $('#ownedPassiveSummary');
@@ -290,10 +342,17 @@
     recommendButton = $('#recommendOwnedPresetBtn');
     purposeSelect = $('#ownedPassivePurpose');
     purposeNote = $('#ownedPassivePurposeNote');
+    movementHint = $('#ownedPassiveMovementHint');
+    targetInput = $('#targetInput');
     nameInput = $('#customPresetName');
     saveButton = $('#savePassivePresetBtn');
     deleteButton = $('#deletePassivePresetBtn');
-    purposeSelect.addEventListener('change', refreshControls);
+    purposeSelect.addEventListener('change', () => {
+      if (purposeSelect.value !== autoPurpose) autoPurpose = null;
+      refreshControls();
+    });
+    targetInput?.addEventListener('input', refreshMovementHint);
+    targetInput?.addEventListener('change', refreshMovementHint);
     customGroup = document.createElement('optgroup');
     customGroup.label = '保存したプリセット';
     customGroup.dataset.customPresetGroup = 'true';
