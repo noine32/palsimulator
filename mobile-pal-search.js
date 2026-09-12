@@ -4,6 +4,9 @@
   const recentKey=id=>`palbreeder-recent-${id}`;
   const getRecent=id=>{try{return JSON.parse(localStorage.getItem(recentKey(id))||'[]')}catch{return[]}};
   const saveRecent=(id,value)=>{if(!value)return;const xs=[value,...getRecent(id).filter(x=>x!==value)].slice(0,5);try{localStorage.setItem(recentKey(id),JSON.stringify(xs))}catch{}};
+  const favoriteKey=id=>`palbreeder-favorites-${id}`;
+  const getFavorites=id=>{try{const xs=JSON.parse(localStorage.getItem(favoriteKey(id))||'[]');return Array.isArray(xs)?xs.filter(Boolean):[]}catch{return[]}};
+  const toggleFavorite=(id,value)=>{if(!value)return;const xs=getFavorites(id),next=xs.includes(value)?xs.filter(x=>x!==value):[value,...xs];try{localStorage.setItem(favoriteKey(id),JSON.stringify(next.slice(0,30)))}catch{}};
   const score=(value,q)=>{const v=normalize(value);if(!q)return 9;if(v===q)return 0;if(v.startsWith(q))return 1;const words=v.split(/\s+/);if(words.some(w=>w.startsWith(q)))return 2;if(v.includes(q))return 3;return 99};
   const isMobile=()=>matchMedia('(max-width:900px)').matches;
   const escapeHtml=s=>String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -14,11 +17,13 @@
     if(!all.length)return[];
     const nq=normalize(q);
     if(!nq){
+      const favorites=getFavorites(inputId).filter(v=>all.includes(v));
       const recent=getRecent(inputId).filter(v=>all.includes(v));
-      const rest=all.filter(v=>!recent.includes(v)).slice(0,30-recent.length);
-      return [...recent,...rest].slice(0,30).map((v,i)=>({v,recent:i<recent.length}));
+      const ordered=[...new Set([...favorites,...recent,...all])].slice(0,30);
+      return ordered.map(v=>({v,favorite:favorites.includes(v),recent:recent.includes(v)}));
     }
-    return all.map(v=>({v,s:score(v,nq)})).filter(x=>x.s<99).sort((a,b)=>a.s-b.s||a.v.localeCompare(b.v,'ja')).slice(0,40);
+    const favorites=getFavorites(inputId);
+    return all.map(v=>({v,s:score(v,nq),favorite:favorites.includes(v)})).filter(x=>x.s<99).sort((a,b)=>a.s-b.s||Number(b.favorite)-Number(a.favorite)||a.v.localeCompare(b.v,'ja')).slice(0,40);
   }
 
   function renderRows(container,inputId,q){
@@ -27,7 +32,27 @@
     const rows=rowsFor(inputId,q);
     if(!rows.length){container.innerHTML='<div class="pal-search-empty">一致するパルがありません</div>';return}
     const owned=ownedValues();
-    container.innerHTML=rows.map(x=>`<button type="button" class="pal-search-option" role="option" data-value="${escapeHtml(x.v)}"><span>${escapeHtml(x.v)}</span><span class="pal-search-option-meta">${owned.has(normalize(x.v))?'<small class="is-owned">所持中</small>':''}${x.recent?'<small>最近</small>':''}</span></button>`).join('');
+    container.innerHTML=rows.map(x=>`<div class="pal-search-option" role="option" tabindex="0" data-value="${escapeHtml(x.v)}"><span>${escapeHtml(x.v)}</span><span class="pal-search-option-meta"><button type="button" class="pal-search-option-favorite" data-favorite-value="${escapeHtml(x.v)}" aria-label="${x.favorite?'お気に入りから削除':'お気に入りに追加'}" aria-pressed="${x.favorite}">${x.favorite?'★':'☆'}</button>${owned.has(normalize(x.v))?'<small class="is-owned">所持中</small>':''}${x.recent?'<small>最近</small>':''}</span></div>`).join('');
+  }
+
+  function handleFavorite(event,container,inputId,q){
+    const favorite=event.target.closest('.pal-search-option-favorite');
+    if(!favorite)return false;
+    if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return true;
+    event.preventDefault();
+    event.stopPropagation();
+    toggleFavorite(inputId,favorite.dataset.favoriteValue);
+    renderRows(container,inputId,q);
+    return true;
+  }
+
+  function handleOption(event,container,inputId,choose){
+    if(handleFavorite(event,container,inputId,event.currentTarget.__searchQuery||''))return;
+    if(event.type==='keydown'&&!['Enter',' '].includes(event.key))return;
+    const el=event.target.closest('.pal-search-option');
+    if(!el)return;
+    event.preventDefault();
+    choose(el.dataset.value);
   }
 
   function makeMobilePicker(input,inputId,button,choose){
@@ -106,11 +131,13 @@
     });
     results.addEventListener('click',e=>{
       if(performance.now()<suppressChoiceUntil)return;
+      results.__searchQuery=searchInput.value;
+      if(handleFavorite(e,results,inputId,searchInput.value))return;
       const el=e.target.closest('.pal-search-option');
       if(!el)return;
-      choose(el.dataset.value);
-      close();
+      choose(el.dataset.value);close();
     });
+    results.addEventListener('keydown',e=>{results.__searchQuery=searchInput.value;handleOption(e,results,inputId,value=>{choose(value);close()})});
     clearBtn.addEventListener('click',()=>{searchInput.value='';renderRows(results,inputId,'');searchInput.focus({preventScroll:true})});
     closeBtn.addEventListener('click',()=>{input.value=previousValue;close()});
     modal.querySelector('.pal-search-modal-backdrop').addEventListener('click',close);
@@ -191,9 +218,12 @@
     });
     panel.addEventListener('click',e=>{
       if(isMobile())return;
+      panel.__searchQuery=input.value;
+      if(handleFavorite(e,panel,inputId,input.value))return;
       const el=e.target.closest('.pal-search-option');
       if(el)choose(el.dataset.value);
     });
+    panel.addEventListener('keydown',e=>{if(isMobile())return;panel.__searchQuery=input.value;handleOption(e,panel,inputId,choose)});
     clear.addEventListener('click',e=>{
       e.preventDefault();
       e.stopPropagation();

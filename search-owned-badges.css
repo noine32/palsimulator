@@ -1,3 +1,5 @@
 .pal-search-option-meta{display:flex;flex:0 0 auto;align-items:center;gap:4px}
+.pal-search-option-favorite{width:28px;height:28px;padding:0;border:0;border-radius:7px;background:transparent;color:#f3c867;font-size:18px;line-height:1;cursor:pointer}
+.pal-search-option-favorite:hover,.pal-search-option-favorite:focus-visible{background:#2a2d26;outline:2px solid #f3c867;outline-offset:1px}
 .pal-search-option small.is-owned{border-color:#356748;background:#14281c;color:#a9e8bf}
 @media(max-width:520px){.pal-search-option-meta{align-items:flex-end;flex-direction:column}.pal-search-option small{font-size:11px}}
