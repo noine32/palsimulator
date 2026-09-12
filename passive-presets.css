@@ -1,0 +1,17 @@
+.owned-passive-preset-tools{margin:10px 0 14px;padding:12px;background:#10161e;border:1px solid var(--line);border-radius:10px}
+.owned-passive-preset-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.owned-passive-preset-head strong{font-size:13px}
+.owned-passive-preset-head p{margin:4px 0 0}
+.owned-passive-preset-head .button{flex:0 0 auto}
+.owned-passive-preset-result{min-height:18px;margin:8px 0 0;color:var(--accent)}
+.passive-preset-manager{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
+.passive-preset-manager summary{cursor:pointer;color:var(--muted);font-size:12px}
+.passive-preset-manager-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin-top:10px}
+.passive-preset-manager-row button{white-space:nowrap}
+.passive-preset-manager>p{margin:8px 0 0}
+@media(max-width:620px){
+  .owned-passive-preset-head{align-items:stretch;flex-direction:column}
+  .owned-passive-preset-head .button{width:100%;min-height:46px}
+  .passive-preset-manager-row{grid-template-columns:1fr}
+  .passive-preset-manager-row button{width:100%;min-height:44px}
+}

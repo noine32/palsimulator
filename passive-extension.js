@@ -131,6 +131,7 @@
     const b=$('#passiveSearchBtn'); if(b)b.disabled=!ready;
     const badge=$('#passiveReady'); if(badge)badge.textContent=eng?(owned.individuals.length?'利用可能':'所持JSON待ち'):'準備中';
     if(ready && $('#passiveNote')) $('#passiveNote').textContent='最大4つまで選択できます。目的パルは上部の検索欄を使用します。';
+    window.dispatchEvent(new CustomEvent('palbreeder:passive-state',{detail:{eng,owned}}));
   }
 
   async function loadOwned(file){
