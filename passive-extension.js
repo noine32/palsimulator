@@ -14,7 +14,10 @@
     '戦闘・汎用安定': ['MutationPal_Immortal','PAL_ALLAttack_up3','CoolTimeReduction_Up_1','Legend'],
     '戦闘・最大火力': ['WorldTree_ATK','PAL_ALLAttack_up3','PAL_ALLAttack_up2','Legend'],
     'レイド・耐久': ['MutationPal_Immortal','Deffence_up3','Legend','CoolTimeReduction_Up_1'],
-    '移動マウント': ['WorldTree_MoveSpeed','MoveSpeed_up_3','MoveSpeed_up_2','Stamina_Up_1']
+    '移動マウント': ['WorldTree_MoveSpeed','MoveSpeed_up_3','MoveSpeed_up_2','Stamina_Up_1'],
+    '移動・地上': ['WorldTree_MoveSpeed','MoveSpeed_up_3','MoveSpeed_up_2','Stamina_Up_1'],
+    '移動・飛行': ['WorldTree_MoveSpeed','MoveSpeed_up_3','Stamina_Up_1','RideJumpCount_Increase2'],
+    '移動・水上': ['SwimSpeed_up_3','SwimSpeed_up_2','SwimSpeed_up_1','Stamina_Up_1']
   };
 
   const $ = s => document.querySelector(s);
