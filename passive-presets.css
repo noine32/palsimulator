@@ -25,6 +25,13 @@
 .passive-preset-manager-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin-top:10px}
 .passive-preset-manager-row button{white-space:nowrap}
 .passive-preset-manager>p{margin:8px 0 0}
+.passive-preset-saved-list{display:grid;gap:8px;margin-top:10px}
+.passive-preset-saved-list>.muted{margin:0;font-size:12px}
+.passive-preset-saved-card{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;background:#0c1219;border:1px solid var(--line);border-radius:8px}
+.passive-preset-saved-card>div{min-width:0}
+.passive-preset-saved-card strong{font-size:12px}
+.passive-preset-saved-card p{margin:3px 0 0;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
+.passive-preset-saved-card .button{flex:0 0 auto;min-height:36px}
 @media(max-width:620px){
   .owned-passive-preset-head{align-items:stretch;flex-direction:column}
   .owned-passive-preset-actions{display:grid;grid-template-columns:1fr;align-items:stretch}

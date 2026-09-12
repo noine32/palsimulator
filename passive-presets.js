@@ -132,6 +132,7 @@
   let saveButton = null;
   let deleteButton = null;
   let customGroup = null;
+  let savedList = null;
 
   function readSaved() {
     try {
@@ -386,6 +387,15 @@
       customGroup.appendChild(option);
     }
     if (current.startsWith('custom:') && !customForValue(current)) preset.value = '（手動選択）';
+    renderSavedPresetList();
+  }
+
+  function renderSavedPresetList() {
+    if (!savedList) return;
+    const rows = readSaved();
+    savedList.innerHTML = rows.length
+      ? rows.map(row => `<article class="passive-preset-saved-card"><div><strong>${esc(row.name)}</strong><p>${row.ids.map(id => esc(state.eng?.passiveName?.(id) || id)).join(' / ')}</p></div><button type="button" class="button" data-apply-preset="${esc(row.name)}">適用</button></article>`).join('')
+      : '<p class="muted">保存したプリセットはありません。</p>';
   }
 
   function refreshControls() {
@@ -414,7 +424,7 @@
     const tools = document.createElement('div');
     tools.id = 'ownedPassivePresetTools';
     tools.className = 'owned-passive-preset-tools';
-    tools.innerHTML = `<div class="owned-passive-preset-head"><div><strong>所持パッシブから設定</strong><p id="ownedPassiveSummary" class="muted">所持データを読み込むと、所持中のパッシブからおすすめを作成できます。</p><p id="ownedPassiveMovementHint" class="owned-passive-movement-hint muted">目的パルを確定すると、移動タイプに合うおすすめ用途を自動選択します。</p></div><div class="owned-passive-preset-actions"><label class="owned-passive-purpose"><span>おすすめ用途</span><select id="ownedPassivePurpose">${RECOMMENDATION_KEYS.map(key => `<option value="${key}">${key}</option>`).join('')}</select><small id="ownedPassivePurposeNote"></small></label><button id="recommendOwnedPresetBtn" type="button" class="button">この用途でおすすめ</button></div></div><p id="ownedPassivePresetResult" class="muted" aria-live="polite"></p><div id="ownedPassivePresetDetails" class="owned-passive-preset-details" aria-live="polite"></div><details class="passive-preset-manager"><summary>自分のプリセットを保存・管理</summary><div class="passive-preset-manager-row"><input id="customPresetName" type="text" maxlength="40" placeholder="例：今あるパル・拠点用"><button id="savePassivePresetBtn" type="button" class="button">現在の構成を保存</button><button id="deletePassivePresetBtn" type="button" class="button">選択中を削除</button></div><p class="muted">保存するのはパッシブ構成だけです。所持データやトークンは保存・送信しません。</p></details>`;
+    tools.innerHTML = `<div class="owned-passive-preset-head"><div><strong>所持パッシブから設定</strong><p id="ownedPassiveSummary" class="muted">所持データを読み込むと、所持中のパッシブからおすすめを作成できます。</p><p id="ownedPassiveMovementHint" class="owned-passive-movement-hint muted">目的パルを確定すると、移動タイプに合うおすすめ用途を自動選択します。</p></div><div class="owned-passive-preset-actions"><label class="owned-passive-purpose"><span>おすすめ用途</span><select id="ownedPassivePurpose">${RECOMMENDATION_KEYS.map(key => `<option value="${key}">${key}</option>`).join('')}</select><small id="ownedPassivePurposeNote"></small></label><button id="recommendOwnedPresetBtn" type="button" class="button">この用途でおすすめ</button></div></div><p id="ownedPassivePresetResult" class="muted" aria-live="polite"></p><div id="ownedPassivePresetDetails" class="owned-passive-preset-details" aria-live="polite"></div><details class="passive-preset-manager"><summary>自分のプリセットを保存・管理</summary><div class="passive-preset-manager-row"><input id="customPresetName" type="text" maxlength="40" placeholder="例：今あるパル・拠点用"><button id="savePassivePresetBtn" type="button" class="button">現在の構成を保存</button><button id="deletePassivePresetBtn" type="button" class="button">選択中を削除</button></div><p class="muted">保存するのはパッシブ構成だけです。所持データやトークンは保存・送信しません。</p></details><div id="passivePresetSavedList" class="passive-preset-saved-list" aria-live="polite"></div>`;
     grid.after(tools);
 
     summary = $('#ownedPassiveSummary');
@@ -428,6 +438,7 @@
     nameInput = $('#customPresetName');
     saveButton = $('#savePassivePresetBtn');
     deleteButton = $('#deletePassivePresetBtn');
+    savedList = $('#passivePresetSavedList');
     purposeSelect.addEventListener('change', () => {
       if (purposeSelect.value !== autoPurpose) autoPurpose = null;
       refreshControls();
@@ -514,6 +525,18 @@
       preset.value = '（手動選択）';
       renderCustomOptions();
       result.textContent = `「${row.name}」を削除しました。`;
+      refreshControls();
+    });
+
+    savedList.addEventListener('click', event => {
+      const button = event.target.closest('[data-apply-preset]');
+      if (!button) return;
+      const row = readSaved().find(item => item.name === button.dataset.applyPreset);
+      if (!row) return;
+      setSelected(row.ids);
+      preset.value = `custom:${row.name}`;
+      result.textContent = `「${row.name}」を適用しました。`;
+      clearRecommendationDetails();
       refreshControls();
     });
 
