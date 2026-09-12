@@ -60,7 +60,7 @@
     const note = document.createElement('p');
     note.className = 'muted flow-layout-note';
     note.setAttribute('role', 'status');
-    svg.closest('.flow-viewport')?.before(note);
+    svg.closest('.flow-layout')?.before(note);
     const exportButton = document.getElementById(exportButtonId);
 
     async function relayout() {
