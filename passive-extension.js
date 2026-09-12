@@ -59,7 +59,7 @@
         if(!this.jpByDeck[deck] || rec.RegularlyObtainable===true || rec.Invalid===false) this.jpByDeck[deck]=rec.I18n.ja;
       }
       this.passives={};
-      for(const [id,rec] of Object.entries(passiveData||{})) this.passives[id]={name:rec?.I18n?.ja?.Name||rec?.I18n?.en?.Name||id,desc:rec?.I18n?.ja?.Description||''};
+      for(const [id,rec] of Object.entries(passiveData||{})) this.passives[id]={name:rec?.I18n?.ja?.Name||rec?.I18n?.en?.Name||id,desc:rec?.I18n?.ja?.Description||'',rating:Number(rec?.Rating||0),effects:Array.isArray(rec?.Effects)?rec.Effects.map(effect=>({type:String(effect?.EffectType||''),value:Number(effect?.EffectValue||0)})):[]};
       this.movement={};
       for(const name of this.names) this.movement[name]=Object.entries(MOVEMENT_MOUNT_IDS).filter(([,ids])=>ids.has(name)).map(([type])=>type);
       this.cache=new Map();

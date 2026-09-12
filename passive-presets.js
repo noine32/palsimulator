@@ -3,80 +3,95 @@
   const RECOMMENDATION_PROFILES = {
     '所持状況優先': {description: '所持個体数・所持種数を優先', preferred: [], patterns: []},
     '拠点・最高作業速度': {
-      description: '拠点作業向け：作業速度を優先',
+      description: '拠点作業向け：作業速度をプラスする効果だけを優先',
       preferred: ['WorldTree_CraftSpeed', 'CraftSpeed_up3', 'CraftSpeed_up2', 'PAL_CorporateSlave'],
-      patterns: [{re: /作業速度|craftspeed|workspeed/i, weight: 1, label: '作業速度'}]
+      patterns: [{re: /作業速度|craftspeed|workspeed/i, weight: 1, label: '作業速度'}],
+      positiveEffects: ['CraftSpeed'],
+      allowFallback: false
     },
     '拠点・標準作業速度': {
-      description: '拠点作業向け：作業速度を優先',
+      description: '拠点作業向け：作業速度をプラスする効果だけを優先',
       preferred: ['CraftSpeed_up3', 'CraftSpeed_up2', 'PAL_CorporateSlave', 'CraftSpeed_up1'],
-      patterns: [{re: /作業速度|craftspeed|workspeed/i, weight: 1, label: '作業速度'}]
+      patterns: [{re: /作業速度|craftspeed|workspeed/i, weight: 1, label: '作業速度'}],
+      positiveEffects: ['CraftSpeed'],
+      allowFallback: false
     },
     '戦闘・汎用安定': {
-      description: '戦闘向け：攻撃・耐久・クールタイムをバランス重視',
+      description: '戦闘向け：攻撃・耐久・クールタイムのプラス効果を優先',
       preferred: ['MutationPal_Immortal', 'PAL_ALLAttack_up3', 'CoolTimeReduction_Up_1', 'Legend'],
       patterns: [
         {re: /攻撃|attack|shotattack/i, weight: 3, label: '攻撃'},
         {re: /防御|defen[cs]e|hp|回復|吸収|immortal|life.?steal/i, weight: 2, label: '防御・回復'},
         {re: /クールタイム|cooltime|cooldown|アクティブスキル/i, weight: 2, label: 'クールタイム'}
-      ]
+      ],
+      positiveEffects: ['ShotAttack', 'Defense', 'LifeSteal', 'AutoHPRegeneRate', 'ActiveSkillCoolTime_Decrease', /^ElementBoost_/],
+      allowFallback: false
     },
     '戦闘・最大火力': {
-      description: '戦闘向け：攻撃・属性ダメージを優先',
+      description: '戦闘向け：攻撃・属性ダメージをプラスする効果だけを優先',
       preferred: ['WorldTree_ATK', 'PAL_ALLAttack_up3', 'PAL_ALLAttack_up2', 'Legend'],
       patterns: [
         {re: /攻撃|attack|shotattack|属性攻撃|elementboost|ダメージ増加/i, weight: 3, label: '攻撃・属性ダメージ'},
         {re: /クリティカル|critical|弱点/i, weight: 2, label: 'クリティカル・弱点'}
-      ]
+      ],
+      positiveEffects: ['ShotAttack', /^ElementBoost_/],
+      allowFallback: false
     },
     'レイド・耐久': {
-      description: 'レイド向け：防御・回復・耐性を優先',
+      description: 'レイド向け：防御・回復・耐性のプラス効果を優先',
       preferred: ['MutationPal_Immortal', 'Deffence_up3', 'Legend', 'CoolTimeReduction_Up_1'],
       patterns: [
         {re: /防御|defen[cs]e|hp|maxhp|体力/i, weight: 3, label: '防御・体力'},
         {re: /回復|吸収|不死|immortal|life.?steal|耐性|resist|ひるみ|吹き飛び/i, weight: 2, label: '回復・耐性'},
         {re: /クールタイム|cooltime|cooldown|アクティブスキル/i, weight: 1, label: 'クールタイム'}
-      ]
+      ],
+      positiveEffects: ['Defense', 'LifeSteal', 'AutoHPRegeneRate', 'ActiveSkillCoolTime_Decrease', /^ElementResist_/, /^ResistAdditionalEffect_/, 'ExplosionResist', 'MaxHP'],
+      allowFallback: false
     },
     '移動・地上': {
-      description: '地上マウント向け：移動速度・スタミナを優先',
+      description: '地上マウント向け：移動速度・スタミナのプラス効果だけを優先',
       preferred: ['WorldTree_MoveSpeed', 'MoveSpeed_up_3', 'MoveSpeed_up_2', 'Stamina_Up_1'],
       patterns: [
         {re: /移動速度|movespeed/i, weight: 3, label: '移動速度'},
         {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'},
         {re: /ライド|ride|mount|騎乗/i, weight: 1, label: 'ライド操作'}
       ],
+      positiveEffects: ['MoveSpeed', 'PalSP_Increase'],
       allowFallback: false,
       exclude: [/水上|swimspeed|swim|泳ぐ|空渡り|ridejump/i]
     },
     '移動・飛行': {
-      description: '飛行マウント向け：移動速度・スタミナ・空中操作を優先',
+      description: '飛行マウント向け：移動速度・スタミナ・空中操作のプラス効果だけを優先',
       preferred: ['WorldTree_MoveSpeed', 'MoveSpeed_up_3', 'Stamina_Up_1', 'RideJumpCount_Increase2'],
       patterns: [
         {re: /移動速度|movespeed/i, weight: 3, label: '移動速度'},
         {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'},
         {re: /ライド|ride|mount|空渡り|ridejump/i, weight: 2, label: '空中操作'}
       ],
+      positiveEffects: ['MoveSpeed', 'PalSP_Increase', 'RideJumpCount_Increase'],
       allowFallback: false,
       exclude: [/水上|swimspeed|swim|泳ぐ/i]
     },
     '移動・水上': {
-      description: '水上マウント向け：水上移動速度・スタミナを優先',
+      description: '水上マウント向け：水上移動速度・スタミナのプラス効果だけを優先',
       preferred: ['SwimSpeed_up_3', 'SwimSpeed_up_2', 'SwimSpeed_up_1', 'Stamina_Up_1'],
       patterns: [
         {re: /水上の移動速度|swimspeed|swim|泳ぐ/i, weight: 3, label: '水上移動速度'},
         {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'}
       ],
+      positiveEffects: ['SwimSpeed', 'PalSP_Increase'],
       allowFallback: false
     },
     '移動マウント': {
-      description: '汎用マウント向け：移動速度・スタミナを優先',
+      description: '汎用マウント向け：移動速度・スタミナのプラス効果だけを優先',
       preferred: ['WorldTree_MoveSpeed', 'MoveSpeed_up_3', 'MoveSpeed_up_2', 'Stamina_Up_1'],
       patterns: [
         {re: /移動速度|movespeed/i, weight: 3, label: '移動速度'},
         {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'},
         {re: /ライド|ride|mount|騎乗/i, weight: 1, label: 'ライド操作'}
       ],
+      positiveEffects: ['MoveSpeed', 'PalSP_Increase'],
+      allowFallback: false,
       exclude: [/水上|swimspeed|swim|泳ぐ/i]
     }
   };
@@ -167,6 +182,10 @@
   function recommendationFit(row, profile) {
     if (!profile.patterns.length) return 0;
     const passive = state.eng?.passives?.[row.id] || {};
+    if (profile.positiveEffects?.length && !profile.positiveEffects.some(pattern => (passive.effects || []).some(effect => {
+      const matches = pattern instanceof RegExp ? pattern.test(effect.type) : pattern === effect.type;
+      return matches && Number(effect.value) > 0;
+    }))) return 0;
     const text = `${row.id} ${row.name} ${passive.desc || ''}`;
     if (profile.exclude?.some(pattern => pattern.test(text))) return 0;
     return profile.patterns.reduce((score, pattern) => {
