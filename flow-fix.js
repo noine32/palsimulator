@@ -62,11 +62,20 @@
     note.setAttribute('role', 'status');
     svg.closest('.flow-layout')?.before(note);
     const exportButton = document.getElementById(exportButtonId);
+    const diagram = svg.closest('.flow-layout');
+    const passiveToggle = svg.id === 'passiveFlowSvg' ? document.getElementById('passiveFlowToggle') : null;
+
+    const syncVisibility = hasFlow => {
+      diagram?.classList.toggle('has-flow', hasFlow);
+      if (passiveToggle) passiveToggle.disabled = !hasFlow;
+    };
 
     async function relayout() {
       const currentRevision = ++revision;
       const data = snapshot;
-      if (data.nodes.length < 2) { note.textContent = ''; return; }
+      const hasFlow = data.nodes.length >= 2 && data.edges.length > 0;
+      syncVisibility(hasFlow);
+      if (!hasFlow) { note.textContent = ''; return; }
       note.textContent = '矢印を自動配置しています…';
       if (exportButton) exportButton.disabled = true;
       try {
@@ -78,10 +87,10 @@
             'elk.algorithm': 'layered',
             'elk.direction': mobile ? 'DOWN' : 'RIGHT',
             'elk.edgeRouting': 'ORTHOGONAL',
-            'elk.spacing.nodeNode': '60',
-            'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-            'elk.spacing.edgeNode': '30',
-            'elk.spacing.edgeEdge': '20',
+            'elk.spacing.nodeNode': mobile ? '42' : '64',
+            'elk.layered.spacing.nodeNodeBetweenLayers': mobile ? '82' : '112',
+            'elk.spacing.edgeNode': mobile ? '28' : '34',
+            'elk.spacing.edgeEdge': mobile ? '26' : '24',
             'elk.layered.mergeEdges': 'false',
             'elk.layered.nodePlacement.favorStraightEdges': 'true',
             'elk.padding': '[top=30,left=30,bottom=30,right=30]'
