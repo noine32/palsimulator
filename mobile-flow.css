@@ -1,4 +1,6 @@
 .flow-mobile-only,.flow-task-guide{display:none}
+.flow-zoom-controls{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin:0 0 7px;color:var(--muted);font-size:11px}
+.flow-zoom-controls .button{min-width:36px;min-height:34px;padding:5px 8px}
 @media(max-width:900px){
   .flow-mobile-only,.flow-task-guide{display:block}
   .flow-card .card-title{align-items:stretch;flex-direction:column}
@@ -21,7 +23,7 @@
   .flow-task.is-done .flow-task-copy strong,.flow-task.is-done .flow-task-copy span{text-decoration:line-through}
   #flowDiagram{display:none;margin-top:12px}
   #flowDiagram.is-mobile-open{display:grid}
-  #flowDiagram .flow-viewport{width:100%;overflow:hidden}
+  #flowDiagram .flow-viewport{width:100%;overflow:auto}
   #flowDiagram svg{width:100%;height:auto;min-width:0}
   #flowDiagram .detail-panel{display:none}
 }
