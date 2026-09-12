@@ -176,17 +176,23 @@
   function ownedPassiveRows() {
     const counts = new Map();
     const species = new Map();
+    const genders = new Map();
     for (const individual of state.owned?.individuals || []) {
       for (const id of new Set(individual.passives || [])) {
         if (!state.eng?.passives?.[id]) continue;
         counts.set(id, (counts.get(id) || 0) + 1);
         if (!species.has(id)) species.set(id, new Set());
         species.get(id).add(individual.species);
+        if (!genders.has(id)) genders.set(id, {male: 0, female: 0, unknown: 0});
+        if (individual.gender === 'Male') genders.get(id).male++;
+        else if (individual.gender === 'Female') genders.get(id).female++;
+        else genders.get(id).unknown++;
       }
     }
     return [...counts].map(([id, count]) => ({
       id,
       count,
+      ...(genders.get(id) || {male: 0, female: 0, unknown: 0}),
       species: species.get(id)?.size || 0,
       sources: [...(species.get(id) || [])],
       name: state.eng.passiveName(id)
@@ -257,6 +263,12 @@
     }).join(' / ');
   }
 
+  function recommendationAvailability(row) {
+    if (row.male > 0 && row.female > 0) return '♂♀の供給元あり';
+    if (row.male > 0 || row.female > 0) return '片方の性別を確認';
+    return '性別情報なし';
+  }
+
   function recommendationSources(row) {
     const names = (row.sources || []).map(species => state.eng?.label?.(species) || species);
     if (!names.length) return '供給元情報なし';
@@ -273,7 +285,7 @@
     const coverage = recommendation.fallbackCount
       ? `用途一致 ${recommendation.matchedCount}種類 + 所持状況順 ${recommendation.fallbackCount}枠`
       : `選択 ${recommendation.rows.length}枠`;
-    recommendationDetails.innerHTML = `<div class="owned-passive-recommendation-details-head"><strong>選定理由・供給元</strong><span class="muted">${esc(coverage)}</span></div>${recommendation.rows.map(row => `<article class="owned-passive-recommendation-card"><div class="owned-passive-recommendation-card-head"><strong>${esc(row.name)}</strong><span>${row.count}体 / ${row.species}種</span></div><p>${esc(recommendationReason(row, purpose))}</p>${recommendationEffectSummary(row, purpose) ? `<p class="owned-passive-recommendation-effect">効果：${esc(recommendationEffectSummary(row, purpose))}</p>` : ''}<p class="muted">供給元：${esc(recommendationSources(row))}</p></article>`).join('')}`;
+    recommendationDetails.innerHTML = `<div class="owned-passive-recommendation-details-head"><strong>選定理由・供給元</strong><span class="muted">${esc(coverage)}</span></div>${recommendation.rows.map(row => `<article class="owned-passive-recommendation-card"><div class="owned-passive-recommendation-card-head"><strong>${esc(row.name)}</strong><span>${row.count}体 / ${row.species}種</span></div><p>${esc(recommendationReason(row, purpose))}</p>${recommendationEffectSummary(row, purpose) ? `<p class="owned-passive-recommendation-effect">効果：${esc(recommendationEffectSummary(row, purpose))}</p>` : ''}<p class="muted">供給元：${esc(recommendationSources(row))}</p><p class="owned-passive-recommendation-availability">所持内訳：${row.male}♂ / ${row.female}♀${row.unknown ? ` / 不明 ${row.unknown}` : ''}・${recommendationAvailability(row)}</p></article>`).join('')}`;
   }
 
   function clearRecommendationDetails() {
