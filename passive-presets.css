@@ -10,6 +10,13 @@
 .owned-passive-purpose select{min-height:38px}
 .owned-passive-preset-actions .button{flex:0 0 auto;white-space:nowrap}
 .owned-passive-preset-result{min-height:18px;margin:8px 0 0;color:var(--accent)}
+.owned-passive-preset-details{display:grid;gap:8px;margin-top:8px}
+.owned-passive-recommendation-details-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px}
+.owned-passive-recommendation-card{padding:9px 10px;background:#0c1219;border:1px solid var(--line);border-radius:8px}
+.owned-passive-recommendation-card-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.owned-passive-recommendation-card-head strong{font-size:13px}
+.owned-passive-recommendation-card-head span{font-size:11px;color:var(--muted);white-space:nowrap}
+.owned-passive-recommendation-card p{margin:4px 0 0;font-size:12px}
 .passive-preset-manager{margin-top:10px;border-top:1px solid var(--line);padding-top:9px}
 .passive-preset-manager summary{cursor:pointer;color:var(--muted);font-size:12px}
 .passive-preset-manager-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;margin-top:10px}
@@ -21,6 +28,8 @@
   .owned-passive-purpose{min-width:0}
   .owned-passive-purpose select{min-height:46px}
   .owned-passive-preset-actions .button{width:100%;min-height:46px}
+  .owned-passive-recommendation-details-head{align-items:flex-start;flex-direction:column;gap:2px}
+  .owned-passive-recommendation-card-head{align-items:flex-start;flex-direction:column;gap:2px}
   .passive-preset-manager-row{grid-template-columns:1fr}
   .passive-preset-manager-row button{width:100%;min-height:44px}
 }

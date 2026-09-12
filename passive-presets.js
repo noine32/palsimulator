@@ -5,57 +5,57 @@
     '拠点・最高作業速度': {
       description: '拠点作業向け：作業速度を優先',
       preferred: ['WorldTree_CraftSpeed', 'CraftSpeed_up3', 'CraftSpeed_up2', 'PAL_CorporateSlave'],
-      patterns: [/作業速度|craftspeed|workspeed/i]
+      patterns: [{re: /作業速度|craftspeed|workspeed/i, weight: 1, label: '作業速度'}]
     },
     '拠点・標準作業速度': {
       description: '拠点作業向け：作業速度を優先',
       preferred: ['CraftSpeed_up3', 'CraftSpeed_up2', 'PAL_CorporateSlave', 'CraftSpeed_up1'],
-      patterns: [/作業速度|craftspeed|workspeed/i]
+      patterns: [{re: /作業速度|craftspeed|workspeed/i, weight: 1, label: '作業速度'}]
     },
     '戦闘・汎用安定': {
       description: '戦闘向け：攻撃・耐久・クールタイムをバランス重視',
       preferred: ['MutationPal_Immortal', 'PAL_ALLAttack_up3', 'CoolTimeReduction_Up_1', 'Legend'],
       patterns: [
-        {re: /攻撃|attack|shotattack/i, weight: 3},
-        {re: /防御|defen[cs]e|hp|回復|吸収|immortal|life.?steal/i, weight: 2},
-        {re: /クールタイム|cooltime|cooldown|アクティブスキル/i, weight: 2}
+        {re: /攻撃|attack|shotattack/i, weight: 3, label: '攻撃'},
+        {re: /防御|defen[cs]e|hp|回復|吸収|immortal|life.?steal/i, weight: 2, label: '防御・回復'},
+        {re: /クールタイム|cooltime|cooldown|アクティブスキル/i, weight: 2, label: 'クールタイム'}
       ]
     },
     '戦闘・最大火力': {
       description: '戦闘向け：攻撃・属性ダメージを優先',
       preferred: ['WorldTree_ATK', 'PAL_ALLAttack_up3', 'PAL_ALLAttack_up2', 'Legend'],
       patterns: [
-        {re: /攻撃|attack|shotattack|属性攻撃|elementboost|ダメージ増加/i, weight: 3},
-        {re: /クリティカル|critical|弱点/i, weight: 2}
+        {re: /攻撃|attack|shotattack|属性攻撃|elementboost|ダメージ増加/i, weight: 3, label: '攻撃・属性ダメージ'},
+        {re: /クリティカル|critical|弱点/i, weight: 2, label: 'クリティカル・弱点'}
       ]
     },
     'レイド・耐久': {
       description: 'レイド向け：防御・回復・耐性を優先',
       preferred: ['MutationPal_Immortal', 'Deffence_up3', 'Legend', 'CoolTimeReduction_Up_1'],
       patterns: [
-        {re: /防御|defen[cs]e|hp|maxhp|体力/i, weight: 3},
-        {re: /回復|吸収|不死|immortal|life.?steal|耐性|resist|ひるみ|吹き飛び/i, weight: 2},
-        {re: /クールタイム|cooltime|cooldown|アクティブスキル/i, weight: 1}
+        {re: /防御|defen[cs]e|hp|maxhp|体力/i, weight: 3, label: '防御・体力'},
+        {re: /回復|吸収|不死|immortal|life.?steal|耐性|resist|ひるみ|吹き飛び/i, weight: 2, label: '回復・耐性'},
+        {re: /クールタイム|cooltime|cooldown|アクティブスキル/i, weight: 1, label: 'クールタイム'}
       ]
     },
     '移動・地上': {
       description: '地上マウント向け：移動速度・スタミナを優先',
       preferred: ['WorldTree_MoveSpeed', 'MoveSpeed_up_3', 'MoveSpeed_up_2', 'Stamina_Up_1'],
       patterns: [
-        {re: /移動速度|movespeed/i, weight: 3},
-        {re: /スタミナ|stamina|palsp/i, weight: 2},
-        {re: /ライド|ride|mount|騎乗/i, weight: 1}
+        {re: /移動速度|movespeed/i, weight: 3, label: '移動速度'},
+        {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'},
+        {re: /ライド|ride|mount|騎乗/i, weight: 1, label: 'ライド操作'}
       ],
       allowFallback: false,
-      exclude: [/水上|swimspeed|swim|泳ぐ/i]
+      exclude: [/水上|swimspeed|swim|泳ぐ|空渡り|ridejump/i]
     },
     '移動・飛行': {
       description: '飛行マウント向け：移動速度・スタミナ・空中操作を優先',
       preferred: ['WorldTree_MoveSpeed', 'MoveSpeed_up_3', 'Stamina_Up_1', 'RideJumpCount_Increase2'],
       patterns: [
-        {re: /移動速度|movespeed/i, weight: 3},
-        {re: /スタミナ|stamina|palsp/i, weight: 2},
-        {re: /ライド|ride|mount|空渡り|ridejump/i, weight: 2}
+        {re: /移動速度|movespeed/i, weight: 3, label: '移動速度'},
+        {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'},
+        {re: /ライド|ride|mount|空渡り|ridejump/i, weight: 2, label: '空中操作'}
       ],
       allowFallback: false,
       exclude: [/水上|swimspeed|swim|泳ぐ/i]
@@ -64,8 +64,8 @@
       description: '水上マウント向け：水上移動速度・スタミナを優先',
       preferred: ['SwimSpeed_up_3', 'SwimSpeed_up_2', 'SwimSpeed_up_1', 'Stamina_Up_1'],
       patterns: [
-        {re: /水上の移動速度|swimspeed|swim|泳ぐ/i, weight: 3},
-        {re: /スタミナ|stamina|palsp/i, weight: 2}
+        {re: /水上の移動速度|swimspeed|swim|泳ぐ/i, weight: 3, label: '水上移動速度'},
+        {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'}
       ],
       allowFallback: false
     },
@@ -73,9 +73,9 @@
       description: '汎用マウント向け：移動速度・スタミナを優先',
       preferred: ['WorldTree_MoveSpeed', 'MoveSpeed_up_3', 'MoveSpeed_up_2', 'Stamina_Up_1'],
       patterns: [
-        {re: /移動速度|movespeed/i, weight: 3},
-        {re: /スタミナ|stamina|palsp/i, weight: 2},
-        {re: /ライド|ride|mount|騎乗/i, weight: 1}
+        {re: /移動速度|movespeed/i, weight: 3, label: '移動速度'},
+        {re: /スタミナ|stamina|palsp/i, weight: 2, label: 'スタミナ'},
+        {re: /ライド|ride|mount|騎乗/i, weight: 1, label: 'ライド操作'}
       ],
       exclude: [/水上|swimspeed|swim|泳ぐ/i]
     }
@@ -83,11 +83,13 @@
   const RECOMMENDATION_KEYS = Object.keys(RECOMMENDATION_PROFILES);
   const $ = selector => document.querySelector(selector);
   const $$ = selector => [...document.querySelectorAll(selector)];
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
   let state = {eng: null, owned: null};
   let preset = null;
   let summary = null;
   let result = null;
+  let recommendationDetails = null;
   let recommendButton = null;
   let purposeSelect = null;
   let purposeNote = null;
@@ -151,6 +153,7 @@
       id,
       count,
       species: species.get(id)?.size || 0,
+      sources: [...(species.get(id) || [])],
       name: state.eng.passiveName(id)
     })).sort((a, b) => b.count - a.count || b.species - a.species || a.name.localeCompare(b.name, 'ja'));
   }
@@ -164,6 +167,42 @@
       if (pattern instanceof RegExp) return score + (pattern.test(text) ? 1 : 0);
       return score + (pattern.re.test(text) ? pattern.weight : 0);
     }, 0);
+  }
+
+  function recommendationReason(row, purpose) {
+    const profile = RECOMMENDATION_PROFILES[purpose] || RECOMMENDATION_PROFILES['所持状況優先'];
+    if (purpose === '所持状況優先') return profile.description;
+    const passive = state.eng?.passives?.[row.id] || {};
+    const text = `${row.id} ${row.name} ${passive.desc || ''}`;
+    const labels = [];
+    if (row.preferredIndex >= 0) labels.push('定番構成');
+    for (const pattern of profile.patterns) {
+      if (!(pattern instanceof RegExp) && pattern.label && pattern.re.test(text)) labels.push(pattern.label);
+    }
+    return [...new Set(labels)].join('・') || '所持状況順で補完';
+  }
+
+  function recommendationSources(row) {
+    const names = (row.sources || []).map(species => state.eng?.label?.(species) || species);
+    if (!names.length) return '供給元情報なし';
+    const visible = names.slice(0, 4).join(' / ');
+    return names.length > 4 ? `${visible} ほか${names.length - 4}種` : visible;
+  }
+
+  function renderRecommendationDetails(purpose, recommendation) {
+    if (!recommendationDetails) return;
+    if (!recommendation.rows.length) {
+      recommendationDetails.innerHTML = '';
+      return;
+    }
+    const coverage = recommendation.fallbackCount
+      ? `用途一致 ${recommendation.matchedCount}種類 + 所持状況順 ${recommendation.fallbackCount}枠`
+      : `選択 ${recommendation.rows.length}枠`;
+    recommendationDetails.innerHTML = `<div class="owned-passive-recommendation-details-head"><strong>選定理由・供給元</strong><span class="muted">${esc(coverage)}</span></div>${recommendation.rows.map(row => `<article class="owned-passive-recommendation-card"><div class="owned-passive-recommendation-card-head"><strong>${esc(row.name)}</strong><span>${row.count}体 / ${row.species}種</span></div><p>${esc(recommendationReason(row, purpose))}</p><p class="muted">供給元：${esc(recommendationSources(row))}</p></article>`).join('')}`;
+  }
+
+  function clearRecommendationDetails() {
+    if (recommendationDetails) recommendationDetails.innerHTML = '';
   }
 
   function recommendedPassiveRows(purpose) {
@@ -242,11 +281,12 @@
     const tools = document.createElement('div');
     tools.id = 'ownedPassivePresetTools';
     tools.className = 'owned-passive-preset-tools';
-    tools.innerHTML = `<div class="owned-passive-preset-head"><div><strong>所持パッシブから設定</strong><p id="ownedPassiveSummary" class="muted">所持データを読み込むと、所持中のパッシブからおすすめを作成できます。</p></div><div class="owned-passive-preset-actions"><label class="owned-passive-purpose"><span>おすすめ用途</span><select id="ownedPassivePurpose">${RECOMMENDATION_KEYS.map(key => `<option value="${key}">${key}</option>`).join('')}</select><small id="ownedPassivePurposeNote"></small></label><button id="recommendOwnedPresetBtn" type="button" class="button">この用途でおすすめ</button></div></div><p id="ownedPassivePresetResult" class="muted" aria-live="polite"></p><details class="passive-preset-manager"><summary>自分のプリセットを保存・管理</summary><div class="passive-preset-manager-row"><input id="customPresetName" type="text" maxlength="40" placeholder="例：今あるパル・拠点用"><button id="savePassivePresetBtn" type="button" class="button">現在の構成を保存</button><button id="deletePassivePresetBtn" type="button" class="button">選択中を削除</button></div><p class="muted">保存するのはパッシブ構成だけです。所持データやトークンは保存・送信しません。</p></details>`;
+    tools.innerHTML = `<div class="owned-passive-preset-head"><div><strong>所持パッシブから設定</strong><p id="ownedPassiveSummary" class="muted">所持データを読み込むと、所持中のパッシブからおすすめを作成できます。</p></div><div class="owned-passive-preset-actions"><label class="owned-passive-purpose"><span>おすすめ用途</span><select id="ownedPassivePurpose">${RECOMMENDATION_KEYS.map(key => `<option value="${key}">${key}</option>`).join('')}</select><small id="ownedPassivePurposeNote"></small></label><button id="recommendOwnedPresetBtn" type="button" class="button">この用途でおすすめ</button></div></div><p id="ownedPassivePresetResult" class="muted" aria-live="polite"></p><div id="ownedPassivePresetDetails" class="owned-passive-preset-details" aria-live="polite"></div><details class="passive-preset-manager"><summary>自分のプリセットを保存・管理</summary><div class="passive-preset-manager-row"><input id="customPresetName" type="text" maxlength="40" placeholder="例：今あるパル・拠点用"><button id="savePassivePresetBtn" type="button" class="button">現在の構成を保存</button><button id="deletePassivePresetBtn" type="button" class="button">選択中を削除</button></div><p class="muted">保存するのはパッシブ構成だけです。所持データやトークンは保存・送信しません。</p></details>`;
     grid.after(tools);
 
     summary = $('#ownedPassiveSummary');
     result = $('#ownedPassivePresetResult');
+    recommendationDetails = $('#ownedPassivePresetDetails');
     recommendButton = $('#recommendOwnedPresetBtn');
     purposeSelect = $('#ownedPassivePurpose');
     purposeNote = $('#ownedPassivePurposeNote');
@@ -263,6 +303,7 @@
     preset.addEventListener('change', event => {
       const row = customForValue(preset.value);
       if (!row) {
+        clearRecommendationDetails();
         refreshControls();
         return;
       }
@@ -270,6 +311,7 @@
       event.stopImmediatePropagation();
       setSelected(row.ids);
       result.textContent = `「${row.name}」を適用しました。`;
+      clearRecommendationDetails();
       refreshControls();
     }, true);
 
@@ -278,12 +320,14 @@
       const recommendation = recommendedPassiveRows(purpose);
       const rows = recommendation.rows;
       if (!rows.length) {
+        clearRecommendationDetails();
         result.textContent = `「${purpose}」向けの所持パッシブが見つかりません。手動で選択するか、別の用途を試してください。`;
         refreshControls();
         return;
       }
       setSelected(rows.map(row => row.id));
       preset.value = '（手動選択）';
+      renderRecommendationDetails(purpose, recommendation);
       let message = `「${purpose}」向けに設定しました：${rows.map(row => row.name).join(' / ')}`;
       if (purpose !== '所持状況優先' && recommendation.fallbackCount) {
         message += ` 用途に合う所持パッシブが${recommendation.matchedCount}種類のため、残り${recommendation.fallbackCount}枠は所持状況順で補完しました。`;
@@ -340,6 +384,7 @@
   window.addEventListener('palbreeder:passive-state', event => {
     state = event.detail || state;
     if (enhance()) {
+      clearRecommendationDetails();
       renderCustomOptions();
       refreshControls();
     }
