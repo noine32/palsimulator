@@ -1,4 +1,5 @@
-const CACHE='palbreeder-shell-v2';
+const CACHE='palbreeder-shell-v3-elk';
+const ELK_URL='https://cdn.jsdelivr.net/npm/elkjs@0.10.0/lib/elk.bundled.js';
 const SHELL=[
   './','./index.html','./styles.css','./ux-p0.css','./ux-p1.css',
   './mobile-bottom-nav.css','./mobile-owned-list.css','./data-screen.css','./mobile-reverse.css','./mobile-flow.css','./passive-picker.css','./search-owned-badges.css','./polish.css',
@@ -7,7 +8,10 @@ const SHELL=[
 ];
 
 self.addEventListener('install',event=>{
-  event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));
+  event.waitUntil(caches.open(CACHE).then(cache=>Promise.all([
+    cache.addAll(SHELL),
+    fetch(ELK_URL,{mode:'no-cors'}).then(response=>cache.put(ELK_URL,response)).catch(()=>{})
+  ])).then(()=>self.skipWaiting()));
 });
 
 self.addEventListener('activate',event=>{
@@ -16,7 +20,12 @@ self.addEventListener('activate',event=>{
 
 self.addEventListener('fetch',event=>{
   const request=event.request;
-  if(request.method!=='GET'||new URL(request.url).origin!==self.location.origin)return;
+  if(request.method!=='GET')return;
+  if(request.url===ELK_URL){
+    event.respondWith(caches.match(ELK_URL).then(cached=>cached||fetch(request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(ELK_URL,copy));return response})));
+    return;
+  }
+  if(new URL(request.url).origin!==self.location.origin)return;
   if(request.mode==='navigate'){
     event.respondWith(fetch(request).then(response=>{const copy=response.clone();caches.open(CACHE).then(cache=>cache.put('./index.html',copy));return response}).catch(()=>caches.match('./index.html')));
     return;
