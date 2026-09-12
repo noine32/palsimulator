@@ -7,7 +7,8 @@
     flow:'<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M9 5.5h4a4 4 0 0 1 4 4V16M13 13l4 3 4-3"/></svg>',
     reverse:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 5 11l4 4M5 11h8a5 5 0 0 1 5 5v2"/></svg>',
     owned:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5 12 4l8 4.5v8L12 21l-8-4.5zM4 8.5l8 4.5 8-4.5M12 13v8"/></svg>',
-    data:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4 4 0 1 1 .7-7.9A6 6 0 0 1 19 12a3 3 0 0 1-1 5.8M12 12v8M9 15l3-3 3 3"/></svg>'
+    data:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 18a4 4 0 1 1 .7-7.9A6 6 0 0 1 19 12a3 3 0 0 1-1 5.8M12 12v8M9 15l3-3 3 3"/></svg>',
+    passive:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M7 8l5-4 5 4M7 16l5 4 5-4M4 12h16"/></svg>'
   };
 
   function setup(){
@@ -17,7 +18,7 @@
     nav.className='mobile-bottom-nav';
     nav.setAttribute('aria-label','メインメニュー');
     nav.innerHTML=[
-      ['route','検索'],['flow','フロー'],['reverse','逆引き'],['owned','所持'],['data','データ']
+      ['route','検索'],['flow','フロー'],['reverse','逆引き'],['owned','所持'],['passive','継承'],['data','データ']
     ].map(([tab,label])=>`<button type="button" class="mobile-nav-button" data-mobile-tab="${tab}">${icons[tab]}<span>${label}</span></button>`).join('');
     document.body.appendChild(nav);
     const syncActive=()=>{
