@@ -42,6 +42,16 @@
     if(ownedSummary)new MutationObserver(sync).observe(ownedSummary,{childList:true,characterData:true,subtree:true});
   }
 
+  function setupPlannerHint(){
+    const card=$('.target-card');
+    if(!card||$('#plannerFlowHint'))return;
+    const hint=document.createElement('p');
+    hint.id='plannerFlowHint';
+    hint.className='planner-flow-hint';
+    hint.innerHTML='<span>使い方</span> 所持データ → 目的パル → 通常配合 / パッシブ継承 → 結果を確認';
+    card.append(hint);
+  }
+
   async function loadDemo(){
     const btn=$('#demoBtn');
     if(!btn)return;
@@ -97,6 +107,6 @@
     new MutationObserver(render).observe(body,{childList:true,subtree:true,characterData:true});
   }
 
-  function init(){setupGuide();setupRouteCards();}
+  function init(){setupGuide();setupPlannerHint();setupRouteCards();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
