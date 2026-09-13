@@ -1,5 +1,5 @@
 .flow-mobile-only,.flow-task-guide{display:none}
-.flow-zoom-controls{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin:0 0 7px;color:var(--muted);font-size:11px}
+.flow-zoom-controls{grid-column:1/-1;display:flex;align-items:center;justify-content:flex-end;gap:5px;margin:0 0 7px;color:var(--muted);font-size:11px}
 .flow-zoom-controls .button{min-width:36px;min-height:34px;padding:5px 8px}
 @media(max-width:900px){
   .flow-mobile-only,.flow-task-guide{display:block}
