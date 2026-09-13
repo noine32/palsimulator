@@ -29,6 +29,12 @@ async function sha256Hex(value) {
 
 function validUid(uid) { return /^[0-9]{1,20}$/.test(uid); }
 
+function comparablePlayerData(data) {
+  if (!data || typeof data !== 'object') return '';
+  const { generated_at: _generatedAt, ...stable } = data;
+  return JSON.stringify(stable);
+}
+
 async function parseJson(request, maxBytes = 2_000_000) {
   const len = Number(request.headers.get('content-length') || 0);
   if (len > maxBytes) throw new Error('payload too large');
@@ -61,8 +67,19 @@ export default {
         const data = await parseJson(request);
         if (data?.schema !== 'palbreeder-owned-pals-v1') return json({ error: 'invalid schema' }, 400, origin, env);
         if (String(data?.player?.uid ?? '') !== uid) return json({ error: 'uid mismatch' }, 400, origin, env);
-        await env.PAL_DATA.put(`player:${uid}`, JSON.stringify(data));
-        return json({ ok: true, uid, generated_at: data.generated_at || null }, 200, origin, env);
+        const key = `player:${uid}`;
+        const current = await env.PAL_DATA.get(key);
+        if (current) {
+          try {
+            if (comparablePlayerData(JSON.parse(current)) === comparablePlayerData(data)) {
+              return json({ ok: true, uid, changed: false, generated_at: data.generated_at || null }, 200, origin, env);
+            }
+          } catch (_) {
+            // Replace malformed legacy data with the validated payload below.
+          }
+        }
+        await env.PAL_DATA.put(key, JSON.stringify(data));
+        return json({ ok: true, uid, changed: true, generated_at: data.generated_at || null }, 200, origin, env);
       } catch (e) {
         return json({ error: e.message || 'invalid json' }, 400, origin, env);
       }
