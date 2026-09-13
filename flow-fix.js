@@ -58,6 +58,8 @@
     let revision = 0;
     let snapshot = capture(svg);
     let scale = 1;
+    let intrinsicWidth = 0;
+    let intrinsicHeight = 0;
     const note = document.createElement('p');
     note.className = 'muted flow-layout-note';
     note.setAttribute('role', 'status');
@@ -72,8 +74,14 @@
     diagram?.insertBefore(zoomControls, viewport || null);
 
     const applyScale = () => {
-      svg.style.width = `${Math.round(scale * 100)}%`;
-      svg.style.height = 'auto';
+      const mobile = matchMedia('(max-width:900px)').matches;
+      if (mobile) {
+        svg.style.width = `${Math.round(scale * 100)}%`;
+        svg.style.height = 'auto';
+      } else {
+        svg.style.width = `${Math.round(intrinsicWidth * scale)}px`;
+        svg.style.height = `${Math.round(intrinsicHeight * scale)}px`;
+      }
       svg.style.minWidth = '0';
       const resetButton = zoomControls.querySelector('[data-flow-zoom="reset"]');
       if (resetButton) resetButton.textContent = `${Math.round(scale * 100)}%`;
@@ -131,6 +139,8 @@
         svg.setAttribute('viewBox', `0 0 ${graph.width} ${graph.height}`);
         svg.setAttribute('width', graph.width);
         svg.setAttribute('height', graph.height);
+        intrinsicWidth = graph.width;
+        intrinsicHeight = graph.height;
         applyScale();
         note.textContent = '親から子へ矢印をたどれます。';
       } catch (_) {
