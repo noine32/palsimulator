@@ -52,7 +52,10 @@ foreach ($file in $files) {
   if ($uid -notmatch '^\d{1,20}$') { throw "Invalid player uid in $($file.FullName)" }
 
   $pushUrl = "$WorkerBaseUrl/api/v1/player/$uid"
-  Invoke-JsonPost -Url $pushUrl -Body $raw | Out-Null
+  $uploadResult = Invoke-JsonPost -Url $pushUrl -Body $raw
+  if ($uploadResult.changed -eq $false) {
+    Write-Host "Skipped unchanged player data: $uid"
+  }
 
   if (-not $tokenMap.ContainsKey($uid)) {
     $tokenMap[$uid] = New-ReadToken
