@@ -35,8 +35,8 @@
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const norm = s => String(s ?? '').normalize('NFKC').replace(/[\u3041-\u3096]/g, ch => String.fromCharCode(ch.charCodeAt(0)+0x60)).toLowerCase().trim();
   const cmp = (a,b) => { for(let i=0;i<Math.max(a.length,b.length);i++){const x=a[i]??0,y=b[i]??0;if(x<y)return-1;if(x>y)return 1;}return 0; };
-  const keyState = s => `${s[0]}|${s[1]}`;
-  const parseState = k => { const i=k.lastIndexOf('|'); return [k.slice(0,i),Number(k.slice(i+1))]; };
+  const keyState = s => `${s[0]}|${s[1]}|${s[2]||'?'}`;
+  const parseState = k => { const i=k.lastIndexOf('|'),j=k.lastIndexOf('|',i-1); return [k.slice(0,j),Number(k.slice(j+1,i)),k.slice(i+1)]; };
 
   let eng = null;
   let owned = {counts:new Map(), individuals:[]};
@@ -218,15 +218,30 @@
   function selectedPassives(){return $$('.passiveSelect').map(s=>s.value).filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).slice(0,4);}
   function donorMask(ind,desired){let m=0;const p=new Set(ind.passives);desired.forEach((id,i)=>{if(p.has(id))m|=(1<<i);});return m;}
   function maskText(mask,desired){return desired.filter((_,i)=>mask&(1<<i)).map(id=>eng.passiveName(id)).join(' + ')||'なし';}
+  function genderCode(value){return value==='Male'?'M':value==='Female'?'F':'?';}
+  function genderLabel(value){return value==='M'?'♂':value==='F'?'♀':'性別不明';}
+  function canBreed(a,b){return (a==='M'&&b==='F')||(a==='F'&&b==='M');}
 
   function multiPassivePlan(desired,target,maxRounds=6){
     const full=(1<<desired.length)-1,best=new Map(),via=new Map();
     const ownedSpecies=[...owned.counts.keys()].filter(s=>eng.info[s]);
-    for(const s of ownedSpecies){best.set(keyState([s,0]),[0,0]);via.set(keyState([s,0]),{type:'owned'});}
+    const ownedGenders=new Map();
+    for(const ind of owned.individuals){
+      if(!eng.info[ind.species])continue;
+      if(!ownedGenders.has(ind.species))ownedGenders.set(ind.species,new Set());
+      ownedGenders.get(ind.species).add(genderCode(ind.gender));
+    }
+    for(const s of ownedSpecies){
+      for(const gender of ownedGenders.get(s)||[]){
+        const state=[s,0,gender],k=keyState(state);
+        best.set(k,[0,0]);via.set(k,{type:'owned',gender});
+      }
+    }
     for(const ind of owned.individuals){
       if(!eng.info[ind.species])continue;
       const m=donorMask(ind,desired); if(!m)continue;
-      for(let sub=m;sub;sub=(sub-1)&m){const k=keyState([ind.species,sub]);if(!best.has(k)){best.set(k,[0,0]);via.set(k,{type:'source',ind});}}
+      const gender=genderCode(ind.gender);
+      for(let sub=m;sub;sub=(sub-1)&m){const state=[ind.species,sub,gender],k=keyState(state);if(!best.has(k)){best.set(k,[0,0]);via.set(k,{type:'source',ind,gender});}}
     }
     const missing=desired.filter((_,i)=>![...best.keys()].some(k=>(parseState(k)[1]&(1<<i))));
     if(missing.length)return{missing,steps:[],score:null,full};
@@ -236,23 +251,33 @@
       for(const k of passiveStates){const m=parseState(k)[1];if(!byMask.has(m))byMask.set(m,[]);byMask.get(m).push(k);}
       for(const arr of byMask.values()){arr.sort(rank);if(arr.length>90)arr.length=90;}
       const active=[...byMask.values()].flat(),cand=new Map();
-      const offer=(k,score,rec)=>{const cur=best.get(k),p=cand.get(k);if((!cur||cmp(score,cur)<0)&&(!p||cmp(score,p.score)<0))cand.set(k,{score,rec});};
-      for(const k of active){const[species,mask]=parseState(k),sc=best.get(k);for(const partner of ownedSpecies){const child=eng.result(species,partner),ck=keyState([child,mask]);offer(ck,[sc[0]+1,sc[1]+1],{type:'breed',left:[species,mask],right:[partner,0]});}}
+      const offer=(state,score,rec)=>{const k=keyState(state),cur=best.get(k),p=cand.get(k);if((!cur||cmp(score,cur)<0)&&(!p||cmp(score,p.score)<0))cand.set(k,{score,rec});};
+      const offerChild=(left,right,child,score)=>{
+        for(const childGender of ['M','F'])offer([child,score.mask,childGender],[score.rounds,score.generations],{type:'breed',left,right,gender:childGender});
+      };
+      for(const k of active){const[species,mask,gender]=parseState(k),sc=best.get(k);for(const partner of ownedSpecies){
+        for(const partnerGender of ownedGenders.get(partner)||[]){
+          if(!canBreed(gender,partnerGender))continue;
+          const child=eng.result(species,partner);
+          offerChild([species,mask,gender],[partner,0,partnerGender],child,{mask,rounds:sc[0]+1,generations:sc[1]+1});
+        }
+      }}
       for(let i=0;i<active.length;i++){
-        const[a,ma]=parseState(active[i]),sa=best.get(active[i]);
+        const[a,ma,ga]=parseState(active[i]),sa=best.get(active[i]);
         for(let j=i;j<active.length;j++){
-          const[b,mb]=parseState(active[j]),union=ma|mb;if(union===ma||union===mb)continue;
-          const sb=best.get(active[j]),child=eng.result(a,b),ck=keyState([child,union]);
-          offer(ck,[sa[0]+sb[0]+1,Math.max(sa[1],sb[1])+1],{type:'breed',left:[a,ma],right:[b,mb]});
+          const[b,mb,gb]=parseState(active[j]),union=ma|mb;if(union===ma||union===mb||!canBreed(ga,gb))continue;
+          const sb=best.get(active[j]),child=eng.result(a,b);
+          offerChild([a,ma,ga],[b,mb,gb],child,{mask:union,rounds:sa[0]+sb[0]+1,generations:Math.max(sa[1],sb[1])+1});
         }
       }
       let changed=false;for(const[k,v]of cand){if(!best.has(k)||cmp(v.score,best.get(k))<0){best.set(k,v.score);via.set(k,v.rec);changed=true;}}
-      if(best.has(keyState([target,full]))&&round>=1)break;if(!changed)break;
+      if([...best.keys()].some(k=>{const[s,m]=parseState(k);return s===target&&m===full})&&round>=1)break;if(!changed)break;
     }
-    const final=keyState([target,full]);if(!best.has(final))return{missing:[],steps:[],score:null,full};
+    const finalCandidates=[...best.keys()].filter(k=>{const[s,m]=parseState(k);return s===target&&m===full}).sort(rank);
+    const final=finalCandidates[0];if(!final)return{missing:[],steps:[],score:null,full};
     const ordered=[],seen=new Set();
     const visit=st=>{const k=keyState(st);if(seen.has(k))return;seen.add(k);const r=via.get(k);if(!r||r.type!=='breed')return;visit(r.left);visit(r.right);ordered.push([r.left,r.right,st]);};
-    visit([target,full]); return{missing:[],steps:ordered,score:best.get(final),full,via};
+    visit(parseState(final)); return{missing:[],steps:ordered,score:best.get(final),full,via};
   }
 
   function renderPassive(){
@@ -266,7 +291,7 @@
         const r=multiPassivePlan(desired,target);
         if(r.missing.length){$('#passiveBody').innerHTML='';renderPassiveCards();$('#passiveNote').textContent='所持個体に供給元がないパッシブ: '+r.missing.map(x=>eng.passiveName(x)).join(' / ');return;}
         if(!r.score){$('#passiveBody').innerHTML='';renderPassiveCards();$('#passiveNote').textContent='探索範囲内で目的パルへ集約する候補が見つかりませんでした。';return;}
-        $('#passiveBody').innerHTML=r.steps.map(([l,rr,s],i)=>`<tr><td>${i+1}</td><td>${esc(eng.label(l[0]))}</td><td>${esc(eng.label(rr[0]))}</td><td>${esc(eng.label(s[0]))}</td><td>${esc(maskText(s[1],desired))}</td></tr>`).join('');
+        $('#passiveBody').innerHTML=r.steps.map(([l,rr,s],i)=>`<tr><td>${i+1}</td><td>${esc(eng.label(l[0]))} ${genderLabel(l[2])}</td><td>${esc(eng.label(rr[0]))} ${genderLabel(rr[2])}</td><td>${esc(eng.label(s[0]))} ${genderLabel(s[2])}</td><td>${esc(maskText(s[1],desired))}</td></tr>`).join('');
         renderPassiveCards();
         $('#passiveNote').textContent=`狙うパッシブ: ${desired.map(x=>eng.passiveName(x)).join(' / ')}。候補: 配合 ${r.score[0]}回 / ${r.score[1]}世代。継承はランダムなので、各段階で目的パッシブを継承した子を選別してください。`;
         drawPassiveFlow(target,r.steps,desired);
@@ -277,9 +302,10 @@
   function drawPassiveFlow(target,steps,desired){
     const svg=$('#passiveFlowSvg'),detail=$('#passiveFlowDetail'); svg.innerHTML='';
     const all=new Map(),edges=[];
-    const add=(st,generated=false,step=0)=>{const k=keyState(st);if(!all.has(k))all.set(k,{k,species:st[0],mask:st[1],generated,step});else{const n=all.get(k);n.generated=n.generated||generated;n.step=n.step||step;}return k;};
+    const add=(st,generated=false,step=0)=>{const k=keyState(st);if(!all.has(k))all.set(k,{k,species:st[0],mask:st[1],gender:st[2]||'?',generated,step});else{const n=all.get(k);n.generated=n.generated||generated;n.step=n.step||step;}return k;};
     steps.forEach((s,i)=>{const a=add(s[0],false),b=add(s[1],false),c=add(s[2],true,i+1);edges.push([a,c],[b,c]);});
-    const final=keyState([target,(1<<desired.length)-1]); if(!all.has(final))add([target,(1<<desired.length)-1],true,steps.length);
+    const finalState=steps.length?steps[steps.length-1][2]:[target,(1<<desired.length)-1,'?'];
+    const final=keyState(finalState); if(!all.has(final))add(finalState,true,steps.length);
     const parents=new Map();for(const[a,c]of edges){if(!parents.has(c))parents.set(c,[]);parents.get(c).push(a);}
     const depthMemo=new Map();const depth=k=>{if(depthMemo.has(k))return depthMemo.get(k);const ps=parents.get(k)||[];const d=ps.length?Math.max(...ps.map(depth))+1:0;depthMemo.set(k,d);return d;};
     const columns=new Map();for(const n of all.values()){const d=depth(n.k);if(!columns.has(d))columns.set(d,[]);columns.get(d).push(n);}
@@ -295,8 +321,8 @@
     for(const[a,c]of edges){const[x1,y1]=pos.get(a),[x2,y2]=pos.get(c),sx=x1+boxW,sy=y1+boxH/2,ex=x2,ey=y2+boxH/2,mx=(sx+ex)/2;svg.insertAdjacentHTML('beforeend',`<path d="M${sx} ${sy} H${mx} V${ey} H${ex}" fill="none" stroke="#657080" stroke-width="1.5" marker-end="url(#passiveArrow)"/>`);}
     for(const n of all.values()){
       const[x,y]=pos.get(n.k),goal=n.k===final,fill=goal?'#ffe28a':n.generated?'#cfe1fa':'#ccebd6',txt=maskText(n.mask,desired),id='p'+Math.random().toString(36).slice(2);
-      svg.insertAdjacentHTML('beforeend',`<g id="${id}" tabindex="0"><rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" rx="10" fill="${fill}" stroke="#607080"/><text x="${x+10}" y="${y+22}" fill="#17202a" font-size="13" font-weight="700">${esc(eng.label(n.species))}</text><text x="${x+10}" y="${y+45}" fill="#2e3b47" font-size="11">${n.generated?`途中で作成 / 手順 ${n.step}`:'所持親候補'}</text><text x="${x+10}" y="${y+66}" fill="#4c5a67" font-size="10">${esc(txt.length>34?txt.slice(0,34)+'…':txt)}</text></g>`);
-      svg.querySelector('#'+id).addEventListener('click',()=>{detail.innerHTML=`<h3>${esc(eng.label(n.species))}</h3><p>状態: ${n.generated?'途中で作成':'所持親候補'}</p><p>保持したいパッシブ:</p><p class="muted">${esc(txt)}</p>`;});
+      svg.insertAdjacentHTML('beforeend',`<g id="${id}" tabindex="0"><rect x="${x}" y="${y}" width="${boxW}" height="${boxH}" rx="10" fill="${fill}" stroke="#607080"/><text x="${x+10}" y="${y+22}" fill="#17202a" font-size="13" font-weight="700">${esc(eng.label(n.species))} ${genderLabel(n.gender)}</text><text x="${x+10}" y="${y+45}" fill="#2e3b47" font-size="11">${n.generated?`途中で作成 / 手順 ${n.step}`:'所持親候補'}</text><text x="${x+10}" y="${y+66}" fill="#4c5a67" font-size="10">${esc(txt.length>34?txt.slice(0,34)+'…':txt)}</text></g>`);
+      svg.querySelector('#'+id).addEventListener('click',()=>{detail.innerHTML=`<h3>${esc(eng.label(n.species))} ${genderLabel(n.gender)}</h3><p>状態: ${n.generated?'途中で作成':'所持親候補'}</p><p>保持したいパッシブ:</p><p class="muted">${esc(txt)}</p>`;});
     }
   }
 
