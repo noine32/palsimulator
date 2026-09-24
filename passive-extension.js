@@ -222,7 +222,7 @@
   function genderLabel(value){return value==='M'?'♂':value==='F'?'♀':'性別不明';}
   function canBreed(a,b){return (a==='M'&&b==='F')||(a==='F'&&b==='M');}
 
-  function multiPassivePlan(desired,target,maxRounds=12){
+  function multiPassivePlan(desired,target,maxRounds=20){
     const full=(1<<desired.length)-1,best=new Map(),via=new Map();
     const ownedSpecies=[...owned.counts.keys()].filter(s=>eng.info[s]);
     const ownedGenders=new Map();
@@ -249,10 +249,16 @@
     for(let round=0;round<maxRounds;round++){
       const passiveStates=[...best.keys()].filter(k=>parseState(k)[1]!==0),byMaskGender=new Map();
       for(const k of passiveStates){const[,m,g]=parseState(k),bucket=`${m}|${g}`;if(!byMaskGender.has(bucket))byMaskGender.set(bucket,[]);byMaskGender.get(bucket).push(k);}
-      // Keep both sexes represented for every passive combination. A single
-      // per-mask cap can otherwise discard every state of one sex and make
-      // later generations appear impossible.
-      for(const arr of byMaskGender.values()){arr.sort(rank);if(arr.length>24)arr.length=24;}
+      // Reserve slots by generation as well as sex. Without this, the many
+      // zero-breed owned donors can crowd all generated intermediates out of
+      // the cap, so the search never advances beyond its first layer.
+      for(const arr of byMaskGender.values()){
+        const byGeneration=new Map();
+        for(const k of arr){const generation=best.get(k)[1];if(!byGeneration.has(generation))byGeneration.set(generation,[]);byGeneration.get(generation).push(k);}
+        const retained=[];
+        for(const[generation,states]of byGeneration){states.sort(rank);const cap=generation===0?12:2;retained.push(...states.slice(0,cap));}
+        arr.splice(0,arr.length,...retained);
+      }
       const active=[...byMaskGender.values()].flat(),cand=new Map();
       const offer=(state,score,rec)=>{const k=keyState(state),cur=best.get(k),p=cand.get(k);if((!cur||cmp(score,cur)<0)&&(!p||cmp(score,p.score)<0))cand.set(k,{score,rec});};
       const offerChild=(left,right,child,score)=>{
